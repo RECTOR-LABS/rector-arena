@@ -43,7 +43,7 @@ The oracle evaluates the invariant expectation from on-chain state alone. Verdic
 
 - **Goal**: prove whether an authorization created before a freeze settles after the freeze (INV-2).
 - **Adversary**: A-racer (`docs/THREAT-MODEL.md` §Adversaries).
-- **Setup**: one resting commitment of 25 registered while the wallet is unfrozen. Real-world anchor: OutLayer limit orders are "authorised once, paid out later" and "freezing the wallet stops new orders but does not cancel resting ones" (app.outlayer.ai/docs/agent-custody §Limit Orders, cited in `PRD.md` §2).
+- **Setup**: one resting commitment of 25 registered while the wallet is unfrozen. Real-world anchor: OutLayer limit orders are "authorised once, paid out later" and "freezing the wallet stops new orders but does not cancel resting ones" (app.outlayer.ai/docs/agent-custody §Limit Orders, cited in `PRD.md` §2; frozen snapshot: docs/quotes/outlayer-agent-custody.md).
 - **Steps**:
   1. `agent` creates a resting commitment: settle 25 to `recipient` when the trigger condition holds.
   2. `owner` freezes the policy.
@@ -57,7 +57,7 @@ The oracle evaluates the invariant expectation from on-chain state alone. Verdic
 
 - **Goal**: prove whether one intent id can settle twice after an ambiguous outcome (INV-3).
 - **Adversary**: A-counterparty (`docs/THREAT-MODEL.md` §Adversaries).
-- **Setup**: intent I settles 30 to `recipient`. The first attempt is made to return an ambiguous terminal status mirroring the documented `needs_review` class: "execution was interrupted or unresolved and the fund state is unknown … a retry can double-spend" (app.outlayer.ai/docs/agent-custody, cited in `PRD.md` §2).
+- **Setup**: intent I settles 30 to `recipient`. The first attempt is made to return an ambiguous terminal status mirroring the documented `needs_review` class: "execution was interrupted or unresolved and the fund state is unknown … a retry can double-spend" (app.outlayer.ai/docs/agent-custody, cited in `PRD.md` §2; frozen snapshot: docs/quotes/outlayer-agent-custody.md).
 - **Steps**:
   1. `agent` submits intent I (30 to `recipient`); the first attempt ends in the ambiguous state after broadcast.
   2. The client retries intent I with identical parameters.
