@@ -19,9 +19,9 @@
     61
   ],
   "tx_hashes": [
-    "EsZRaPPsoZ9BP3RfepwwVMTBTRnWj5iqyk8NLVZDU23b",
-    "6bw8wdssBSjEbuLnPRN79Qdtf4r2S45FGdkGtxhxDwGG"
+    "9MnEnYZKzveNbo35PgtQ9cCkMoDaNaSHgV9LgafvGa93",
+    "8ovhXgbW7XYezG6QgPS7gLEDNybEw9y9tZSvA296WD7j"
   ],
-  "ran_at": "2026-11-01T16:52:51Z",
-  "verdict_hash": "d2755b7ca5168d98f06799b028b1b28c31af352f1d42b4ee2b52aef451aa76a6"
+  "ran_at": "2026-11-01T17:18:53Z",
+  "verdict_hash": "fd574e68d7cfdf192685a3fc99584474441460f316e9eed44e16b0f461208063"
 }

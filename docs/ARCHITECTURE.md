@@ -64,7 +64,7 @@ One JSON object per attack run (FR-7 in `PRD.md`), written to `receipts/<attack_
 | `tx_hashes` | array | Transaction hashes of every settle attempt |
 | `ran_at` | string | RFC 3339 UTC timestamp |
 
-The canonical core is the verdict-hash input (FR-11 in `PRD.md` §5): every field above except `ran_at` and `tx_hashes`. The M0 double-run probe (docs/ROADMAP.md §M0 spike record) verifies the core — two runs of one attack at the same fork block height must produce equal verdict hashes — and a field that breaks equality is removed from the core, with the removal recorded in the M0 spike record.
+The canonical core is the verdict-hash input (FR-11 in `PRD.md` §5): the fields `attack_id`, `target`, `verdict`, `per_account_deltas`, in that order. `ran_at`, `tx_hashes`, and `block_heights` are excluded from the hash: `ran_at` and `tx_hashes` are unique per run, and `block_heights` was removed from the core at M3 — sandbox block scheduling splits concurrent gateway settle txs across blocks nondeterministically, which surfaced as a 1-in-4 FR-11 inequality on the gateway (deltas and verdict are structurally deterministic: the gateway reads its spent counter synchronously before any transfer resolves, and the reference serializes check-and-decrement in-contract). The removal is recorded in docs/ROADMAP.md `## M0 spike record` per the procedure pinned above; receipts still carry `block_heights`.
 
 ## Attestation flow
 

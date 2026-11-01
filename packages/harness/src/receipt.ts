@@ -17,14 +17,20 @@ export interface Receipt {
   verdict_hash: string;
 }
 
-/** SHA-256 over the M0-pinned canonical core: every §Receipt-schema field except ran_at and tx_hashes, exact order. */
+/** SHA-256 over the canonical core: attack_id, target, verdict, per_account_deltas — the
+ * fields that are deterministic across runs at one fork height. block_heights joined the
+ * M0-pinned core but was REMOVED at M3 per docs/ARCHITECTURE.md §Receipt schema: sandbox
+ * block scheduling splits concurrent gateway settle txs across blocks nondeterministically
+ * (observed as a 1-in-4 FR-11 inequality on the gateway; deltas and verdict are
+ * structurally deterministic — the gateway reads its spent counter synchronously, the
+ * reference serializes in-contract). Removal recorded in docs/ROADMAP.md §M0 spike record;
+ * receipts still carry block_heights per §Receipt schema. */
 export function verdictHash(core: ReceiptCore): string {
   const canonical = {
     attack_id: core.attackId,
     target: core.target,
     verdict: core.verdict,
     per_account_deltas: core.perAccountDeltas,
-    block_heights: core.blockHeights,
   };
   return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
 }

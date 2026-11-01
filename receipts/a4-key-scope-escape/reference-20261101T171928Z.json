@@ -1,10 +1,10 @@
 {
-  "attack_id": "A5",
+  "attack_id": "A4",
   "target": "reference",
   "verdict": "hold",
   "per_account_deltas": [
     {
-      "account": "victim.test.near",
+      "account": "wallet.test.near",
       "token": "battery-ft",
       "delta": "0"
     },
@@ -15,11 +15,11 @@
     }
   ],
   "block_heights": [
-    63
+    50
   ],
   "tx_hashes": [
-    "8wQ7bZ4wUPyA3ib6ycuc2At3869cXVeP3nqArHNGMAgQ"
+    "DsUUX2UnfcmApn7vMKHfD998GmF14teuinLnT5nWcZLS"
   ],
-  "ran_at": "2026-11-01T16:54:09Z",
-  "verdict_hash": "c7da94786c81f2c57c02d31364cd2aec0c9f908d7386eef69943c148a56fbe2c"
+  "ran_at": "2026-11-01T17:19:28Z",
+  "verdict_hash": "ed4e88d049f758786e24e4385033c8a9d3412e04afc7ff3fc54631de890ac0d3"
 }

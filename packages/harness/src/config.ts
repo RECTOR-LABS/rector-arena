@@ -102,7 +102,7 @@ export const RECEIPTS_DIR = join(HERE, '..', '..', '..', 'receipts');
  * (per-repo .env convention) — the battery's default path stays secret-free (FR-9, SC-1).
  */
 export const ATTEST = {
-  contract: process.env.ARENA_ATTEST_CONTRACT ?? 'attest-2.arena-attest.testnet',
+  contract: process.env.ARENA_ATTEST_CONTRACT ?? 'attest-ledger.testnet',
   gas: 30n * 10n ** 12n,
   attempts: 3,
   backoffMs: 2_000,
