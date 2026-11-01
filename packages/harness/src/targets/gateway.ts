@@ -1,12 +1,13 @@
 import { GatewayTarget } from '@rector-arena/gateway-replica/src/index.js';
+import type { NearAccount } from 'near-workspaces';
 import type { ArenaEnv, ArenaTarget, Policy, SignerKey, SpendTxOutcome } from '../types.js';
 
 /** Thin adapter: the landed fall-mode gateway behind the harness' ArenaTarget interface. */
 export class GatewayTargetAdapter implements ArenaTarget {
   private constructor(private readonly inner: GatewayTarget) {}
 
-  static async boot(arena: ArenaEnv): Promise<GatewayTargetAdapter> {
-    return new GatewayTargetAdapter(await GatewayTarget.boot(arena));
+  static async boot(arena: ArenaEnv, at: NearAccount = arena.wallet): Promise<GatewayTargetAdapter> {
+    return new GatewayTargetAdapter(await GatewayTarget.boot(arena, at));
   }
 
   get walletId(): string {
@@ -47,5 +48,13 @@ export class GatewayTargetAdapter implements ArenaTarget {
 
   submitIntent(intentId: string, receiver: string, amount: bigint, signer: SignerKey): Promise<SpendTxOutcome> {
     return this.inner.submitIntent(intentId, receiver, amount, signer);
+  }
+
+  createRequest(requestId: string, receiver: string, amount: bigint): Promise<void> {
+    return this.inner.createRequest(requestId, receiver, amount);
+  }
+
+  approveRequest(requestId: string): Promise<void> {
+    return this.inner.approveRequest(requestId);
   }
 }

@@ -20,23 +20,27 @@ interface RejectedTxError {
 export class ReferenceTarget implements ArenaTarget {
   readonly walletId: string;
   private readonly arena: ArenaEnv;
+  /** The wallet account this target binds to: arena.wallet, or the A5 victim. */
+  private readonly walletAccount: NearAccount;
 
-  private constructor(arena: ArenaEnv) {
+  private constructor(arena: ArenaEnv, walletAccount: NearAccount) {
     this.arena = arena;
-    this.walletId = arena.wallet.accountId;
+    this.walletAccount = walletAccount;
+    this.walletId = walletAccount.accountId;
   }
 
-  static async boot(arena: ArenaEnv): Promise<ReferenceTarget> {
-    if (!(await arena.wallet.exists())) {
-      throw new Error(`wallet account ${arena.wallet.accountId} does not exist`);
+  /** Boot the reference wallet on `arena.wallet`, or on any account (A5 victim). */
+  static async boot(arena: ArenaEnv, at: NearAccount = arena.wallet): Promise<ReferenceTarget> {
+    if (!(await at.exists())) {
+      throw new Error(`wallet account ${at.accountId} does not exist`);
     }
-    await arena.wallet.deploy(readFileSync(REFERENCE_WASM));
-    await arena.wallet.call(arena.wallet, 'new', { owner_id: arena.owner.accountId, ft_account: arena.ft.accountId });
-    return new ReferenceTarget(arena);
+    await at.deploy(readFileSync(REFERENCE_WASM));
+    await at.call(at, 'new', { owner_id: arena.owner.accountId, ft_account: arena.ft.accountId });
+    return new ReferenceTarget(arena, at);
   }
 
   async setPolicy(policy: Policy): Promise<void> {
-    await this.arena.owner.call(this.arena.wallet, 'set_policy', {
+    await this.arena.owner.call(this.walletAccount, 'set_policy', {
       agent: this.arena.agent.accountId,
       receiver_allowlist: policy.receiverAllowlist,
       velocity_cap: policy.velocityCap.toString(),
@@ -86,8 +90,8 @@ export class ReferenceTarget implements ArenaTarget {
    * the resting set (W-2).
    */
   async fireTrigger(): Promise<SpendTxOutcome[]> {
-    const provider = sandboxProviderOf(this.arena.wallet);
-    const r = await this.arena.agent.callRaw(this.arena.wallet, 'settle_commitments', {}, { gas: SPEND_GAS });
+    const provider = sandboxProviderOf(this.walletAccount);
+    const r = await this.arena.agent.callRaw(this.walletAccount, 'settle_commitments', {}, { gas: SPEND_GAS });
     if (!r.succeeded) {
       throw new Error('settle_commitments failed on the reference wallet');
     }
@@ -107,7 +111,7 @@ export class ReferenceTarget implements ArenaTarget {
   async issueFunctionCallKey(allowanceYocto: bigint): Promise<SignerKey> {
     const kp = KeyPairEd25519.fromRandom();
     const fcKey = nearApiInternals().functionCallAccessKey(this.walletId, ['spend'], allowanceYocto);
-    await this.arena.wallet.batch(this.arena.wallet).addKey(kp.getPublicKey(), fcKey).transact();
+    await this.walletAccount.batch(this.walletAccount).addKey(kp.getPublicKey(), fcKey).transact();
     return { publicKey: kp.getPublicKey().toString(), secretKey: kp.toString() };
   }
 
@@ -117,16 +121,30 @@ export class ReferenceTarget implements ArenaTarget {
    * (allowlist, per-intent max) rejects it on-chain; ok:false IS the reference hold shape.
    */
   async escapeCall(fc: SignerKey, receiver: string, amount: bigint): Promise<SpendTxOutcome> {
-    return this.signedCall(this.arena.wallet.accountId, fc, 'spend', {
+    return this.signedCall(this.walletAccount.accountId, fc, 'spend', {
       receiver_id: receiver,
       amount: amount.toString(),
       nonce: crypto.randomUUID(),
     });
   }
 
+  /** A3/A5 setup: the agent proposes a transfer request (no authorization attached). */
+  async createRequest(requestId: string, receiver: string, amount: bigint): Promise<void> {
+    await this.setupCall(this.arena.agent, 'create_request', {
+      request_id: requestId,
+      receiver_id: receiver,
+      amount: amount.toString(),
+    });
+  }
+
+  /** A3/A5 setup: the owner approves the request — the INV-5 provenance root. */
+  async approveRequest(requestId: string): Promise<void> {
+    await this.setupCall(this.arena.owner, 'approve_request', { request_id: requestId });
+  }
+
   /** Setup tx: must succeed — a failed setup invalidates the attack. */
   private async setupCall(caller: NearAccount, method: string, args: Record<string, unknown>): Promise<void> {
-    const r = await caller.callRaw(this.arena.wallet, method, args, { gas: SPEND_GAS });
+    const r = await caller.callRaw(this.walletAccount, method, args, { gas: SPEND_GAS });
     if (!r.succeeded) {
       throw new Error(`${method} failed on ${this.walletId}`);
     }
@@ -139,8 +157,8 @@ export class ReferenceTarget implements ArenaTarget {
    */
   private async signedCall(signerAccount: string, signer: SignerKey, method: string, args: Record<string, unknown>): Promise<SpendTxOutcome> {
     const kp = KeyPair.fromString(signer.secretKey);
-    const nonce = BigInt((await this.arena.wallet.viewAccessKey(signerAccount, kp.getPublicKey())).nonce) + 1n;
-    const provider = sandboxProviderOf(this.arena.wallet);
+    const nonce = BigInt((await this.walletAccount.viewAccessKey(signerAccount, kp.getPublicKey())).nonce) + 1n;
+    const provider = sandboxProviderOf(this.walletAccount);
     const { header } = await provider.block({ finality: 'final' });
     const action = functionCall(
       method,

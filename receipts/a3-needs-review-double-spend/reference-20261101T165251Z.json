@@ -15,13 +15,13 @@
     }
   ],
   "block_heights": [
-    50,
-    55
+    56,
+    61
   ],
   "tx_hashes": [
-    "53xEo8YKLkLgcoQ2rmm5n7j3r8QTdaDG4DWyPWGwcFJb",
-    "EpUYbkFxE4Ky2ZzS1zWuhn5xReb1vmdFKKN26aA4c7GS"
+    "EsZRaPPsoZ9BP3RfepwwVMTBTRnWj5iqyk8NLVZDU23b",
+    "6bw8wdssBSjEbuLnPRN79Qdtf4r2S45FGdkGtxhxDwGG"
   ],
-  "ran_at": "2026-11-01T11:06:20Z",
-  "verdict_hash": "66792b802f9423ca10e1a22404982b875f33dfab618a77d916ecb03770119dac"
+  "ran_at": "2026-11-01T16:52:51Z",
+  "verdict_hash": "d2755b7ca5168d98f06799b028b1b28c31af352f1d42b4ee2b52aef451aa76a6"
 }

@@ -6,6 +6,12 @@
 //!
 //! M2 hold surfaces: owner freeze cancels every resting commitment (W-2), and
 //! per-intent receipts are consumed exactly once (W-3).
+//!
+//! M3 hold surface: request-flow provenance (INV-5). Keyed settlement
+//! (`spend_intent`) settles only an intent id that names an OWNER-APPROVED
+//! request with matching receiver and amount — the agent can propose requests,
+//! only the owner approves them, so poisoned content alone can never mint an
+//! authorization (A5).
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{UnorderedMap, UnorderedSet};
 use near_sdk::json_types::U128;
@@ -35,6 +41,9 @@ pub struct ReferenceWallet {
     commitments: UnorderedMap<String, Commitment>,
     /// Consumed per-intent receipts: an intent id settles at most once (W-3).
     intents: UnorderedSet<String>,
+    /// Transfer requests by id: proposed by the agent, approved by the owner.
+    /// Keyed settlement requires an approved request with matching args (INV-5).
+    requests: UnorderedMap<String, Request>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -59,6 +68,7 @@ impl ReferenceWallet {
             frozen: false,
             commitments: UnorderedMap::new(b"c".to_vec()),
             intents: UnorderedSet::new(b"i".to_vec()),
+            requests: UnorderedMap::new(b"r".to_vec()),
         }
     }
 
@@ -95,12 +105,15 @@ impl ReferenceWallet {
         self.execute_spend(None, receiver_id, amount)
     }
 
-    /// Agent entry point with per-intent idempotency (W-3): the per-intent
-    /// receipt is consumed exactly once — a replayed intent id aborts and the
-    /// total moved is unchanged. Check order is spec-pinned: authn, intent-id
-    /// unconsumed, allowlist, per-intent cap, velocity cap. A FAILED transfer
-    /// releases the receipt in the callback, so a client retry after a
-    /// genuinely failed settlement stays legitimate.
+    /// Agent entry point with per-intent idempotency (W-3) and request-flow
+    /// provenance (INV-5): the per-intent receipt is consumed exactly once — a
+    /// replayed intent id aborts and the total moved is unchanged — and the
+    /// intent id must name an OWNER-APPROVED request whose receiver and amount
+    /// match the call args. Check order is spec-pinned: authn, request-flow
+    /// provenance (approved + args match), intent-id unconsumed, allowlist,
+    /// per-intent cap, velocity cap. A FAILED transfer releases the receipt in
+    /// the callback, so a client retry after a genuinely failed settlement
+    /// stays legitimate.
     pub fn spend_intent(
         &mut self,
         intent_id: String,
@@ -126,6 +139,18 @@ impl ReferenceWallet {
             "unauthorized agent"
         );
         if let Some(id) = &intent_id {
+            // Request-flow provenance (INV-5): the intent id must name an
+            // owner-approved request whose receiver and amount match — checked
+            // BEFORE consumption, so an unapproved id never burns its receipt.
+            let request = match self.requests.get(id) {
+                Some(r) if r.approved => r,
+                Some(_) => panic!("request {} is not approved", id),
+                None => panic!("no request registered for intent id {}", id),
+            };
+            require!(
+                request.receiver_id == receiver_id && request.amount == amount,
+                "settlement args diverge from the approved request"
+            );
             require!(!self.intents.contains(id), "intent already settled");
         }
         require!(
@@ -185,6 +210,69 @@ impl ReferenceWallet {
         // The promise chain settles the on-chain truth; the local return is
         // advisory only.
         PromiseOrValue::Value(true)
+    }
+
+    /// Agent-only. Proposes a transfer request through the request flow.
+    /// Proposing carries NO authorization: settlement additionally requires the
+    /// owner's approval (INV-5), so a request born from poisoned content can
+    /// never settle by itself (A5).
+    pub fn create_request(&mut self, request_id: String, receiver_id: AccountId, amount: U128) {
+        let policy = self
+            .policy
+            .as_ref()
+            .expect("no policy set");
+        require!(
+            env::predecessor_account_id() == policy.agent,
+            "unauthorized agent"
+        );
+        require!(
+            self.requests.get(&request_id).is_none(),
+            "request id already registered"
+        );
+        self.requests.insert(
+            &request_id,
+            &Request { receiver_id: receiver_id.clone(), amount: amount.into(), approved: false },
+        );
+        env::log_str(
+            &json!({
+                "standard": "rector-arena-policy",
+                "version": "1.0.0",
+                "event": "request_created",
+                "data": {
+                    "request_id": request_id,
+                    "receiver_id": receiver_id,
+                    "amount": amount.0.to_string(),
+                },
+            })
+            .to_string(),
+        );
+    }
+
+    /// Owner-only. Approves a proposed request — the act that makes its intent
+    /// id settleable (the INV-5 provenance root). Approval does not spend: the
+    /// unconsumed-receipt, allowlist, per-intent, and velocity-cap checks all
+    /// still apply at settlement time.
+    pub fn approve_request(&mut self, request_id: String) {
+        require!(
+            env::predecessor_account_id() == self.owner,
+            "only owner can approve requests"
+        );
+        let mut request = self
+            .requests
+            .get(&request_id)
+            .expect("no request registered for id");
+        require!(!request.approved, "request already approved");
+        request.approved = true;
+        self.requests.insert(&request_id, &request);
+        env::log_str(
+            &json!({
+                "standard": "rector-arena-policy",
+                "version": "1.0.0",
+                "event": "request_approved",
+                "data": { "request_id": request_id },
+            })
+            .to_string(),
+        );
     }
 
     /// Callback on the transfer promise: on failure, roll spent back and
@@ -436,6 +524,29 @@ impl ReferenceWallet {
             },
         }
     }
+
+    /// One request by id (W-5 recompute + provenance audits).
+    pub fn get_request(&self, request_id: String) -> Option<RequestView> {
+        self.requests.get(&request_id).map(|r| RequestView {
+            request_id,
+            receiver_id: r.receiver_id,
+            amount: U128(r.amount),
+            approved: r.approved,
+        })
+    }
+
+    /// Every recorded request, oldest-index first.
+    pub fn get_requests(&self) -> Vec<RequestView> {
+        self.requests
+            .iter()
+            .map(|(id, r)| RequestView {
+                request_id: id,
+                receiver_id: r.receiver_id,
+                amount: U128(r.amount),
+                approved: r.approved,
+            })
+            .collect()
+    }
 }
 
 #[derive(near_sdk::serde::Serialize)]
@@ -454,6 +565,24 @@ pub struct PolicyView {
 pub struct Commitment {
     receiver_id: AccountId,
     amount: Balance,
+}
+
+/// A transfer request proposed by the agent: settleable only after the owner
+/// approves it (INV-5 request-flow provenance).
+#[derive(BorshDeserialize, BorshSerialize)]
+pub struct Request {
+    receiver_id: AccountId,
+    amount: Balance,
+    approved: bool,
+}
+
+#[derive(near_sdk::serde::Serialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct RequestView {
+    pub request_id: String,
+    pub receiver_id: AccountId,
+    pub amount: U128,
+    pub approved: bool,
 }
 
 /// One planned commitment settlement — an entry of the settle→callback arg

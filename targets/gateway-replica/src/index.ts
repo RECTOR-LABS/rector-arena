@@ -7,6 +7,7 @@
  * deposits, so the crafted escape is rejected on-chain).
  */
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,8 +78,16 @@ function nearApiInternals(): NearApiInternals {
   const fromNearWorkspaces = createRequire(fromHere.resolve('near-workspaces/package.json'));
   const tx = fromNearWorkspaces('near-api-js/lib/transaction') as { functionCallAccessKey: FunctionCallAccessKeyFn; createTransaction: CreateTransactionFn; signTransaction: SignTransactionFn };
   const nu = fromNearWorkspaces('@near-js/utils') as { baseDecode: BaseDecodeFn };
-  const hashing = fromNearWorkspaces('@noble/hashes/sha256') as { sha256: Sha256Fn };
-  internals = { functionCallAccessKey: tx.functionCallAccessKey, createTransaction: tx.createTransaction, signTransaction: tx.signTransaction, baseDecode: nu.baseDecode, sha256: hashing.sha256 };
+  internals = {
+    functionCallAccessKey: tx.functionCallAccessKey,
+    createTransaction: tx.createTransaction,
+    signTransaction: tx.signTransaction,
+    baseDecode: nu.baseDecode,
+    // The tx-signing path hashes the encoded tx with sha256; node:crypto produces the
+    // identical digest without resolving @noble/hashes (subpath exports differ across the
+    // versions in this dependency tree).
+    sha256: (message: Uint8Array) => new Uint8Array(createHash('sha256').update(message).digest()),
+  };
   return internals;
 }
 
@@ -108,6 +117,8 @@ interface RejectedTxError {
 export class GatewayTarget {
   readonly walletId: string;
   private readonly arena: ArenaEnv;
+  /** The wallet account this target binds to: arena.wallet, or the A5 victim. */
+  private readonly walletAccount: NearAccount;
   private policy: Policy | null = null;
   private spent = 0n;
   private forwarderDeployed = false;
@@ -115,19 +126,21 @@ export class GatewayTarget {
   private readonly commitments = new Map<string, { receiver: string; amount: bigint }>();
   private commitmentKey: SignerKey | null = null;
 
-  private constructor(arena: ArenaEnv) {
+  private constructor(arena: ArenaEnv, walletAccount: NearAccount) {
     this.arena = arena;
-    this.walletId = arena.wallet.accountId;
+    this.walletAccount = walletAccount;
+    this.walletId = walletAccount.accountId;
   }
 
-  static async boot(arena: ArenaEnv): Promise<GatewayTarget> {
-    if (!(await arena.wallet.exists())) {
-      throw new Error(`wallet account ${arena.wallet.accountId} does not exist`);
+  /** Boot the gateway wallet on `arena.wallet`, or on any account (A5 victim). */
+  static async boot(arena: ArenaEnv, at: NearAccount = arena.wallet): Promise<GatewayTarget> {
+    if (!(await at.exists())) {
+      throw new Error(`wallet account ${at.accountId} does not exist`);
     }
-    if ((await arena.wallet.accountView()).code_hash !== EMPTY_CODE_HASH) {
+    if ((await at.accountView()).code_hash !== EMPTY_CODE_HASH) {
       throw new Error('wallet must not have a deployed contract');
     }
-    return new GatewayTarget(arena);
+    return new GatewayTarget(arena, at);
   }
 
   async setPolicy(policy: Policy): Promise<void> {
@@ -136,11 +149,11 @@ export class GatewayTarget {
   }
 
   async provisionSpendKeys(count: number): Promise<SignerKey[]> {
-    const signer = await this.arena.wallet.getKey();
+    const signer = await this.walletAccount.getKey();
     const keys: SignerKey[] = [];
     for (let i = 0; i < count; i++) {
       const kp = KeyPairEd25519.fromRandom();
-      await this.arena.wallet.batch(this.arena.wallet).addKey(kp.getPublicKey()).transact(signer ?? undefined);
+      await this.walletAccount.batch(this.walletAccount).addKey(kp.getPublicKey()).transact(signer ?? undefined);
       keys.push({ publicKey: kp.getPublicKey().toString(), secretKey: kp.toString() });
     }
     return keys;
@@ -178,11 +191,11 @@ export class GatewayTarget {
    */
   async issueFunctionCallKey(allowanceYocto: bigint): Promise<SignerKey> {
     await this.ensureForwarder();
-    const signer = await this.arena.wallet.getKey();
+    const signer = await this.walletAccount.getKey();
     const kp = KeyPairEd25519.fromRandom();
     const fcAccessKey = nearApiInternals().functionCallAccessKey(this.walletId, ['forward'], allowanceYocto);
-    await this.arena.wallet
-      .batch(this.arena.wallet)
+    await this.walletAccount
+      .batch(this.walletAccount)
       .addKey(kp.getPublicKey(), fcAccessKey)
       .transact(signer ?? undefined);
     return { publicKey: kp.getPublicKey().toString(), secretKey: kp.toString() };
@@ -191,8 +204,8 @@ export class GatewayTarget {
   /** Escape path: the FC key calls forward(); the forwarder trusts method args — no policy validation. */
   async escapeCall(fc: SignerKey, receiver: string, amount: bigint): Promise<SpendTxOutcome> {
     await this.ensureForwarder();
-    const r = await this.arena.wallet.callRaw(
-      this.arena.wallet,
+    const r = await this.walletAccount.callRaw(
+      this.walletAccount,
       'forward',
       { receiver_id: receiver, amount: amount.toString() },
       { signWithKey: KeyPair.fromString(fc.secretKey) },
@@ -272,27 +285,37 @@ export class GatewayTarget {
     return outcome;
   }
 
+  /**
+   * A3/A5 setup: the gateway has NO request flow — there is nothing to propose into, so
+   * the surface is absent. This no-op exists so the battery can drive identical agent
+   * flows on both targets; the fall is that settlement needs no owner approval at all.
+   */
+  async createRequest(_requestId: string, _receiver: string, _amount: bigint): Promise<void> {}
+
+  /** A3/A5 setup: no request flow means nothing to approve (the documented gateway gap). */
+  async approveRequest(_requestId: string): Promise<void> {}
+
   /** Full-access key on the wallet for settling resting commitments (lazily provisioned). */
   private async ensureCommitmentKey(): Promise<SignerKey> {
     if (this.commitmentKey !== null) return this.commitmentKey;
-    const signer = await this.arena.wallet.getKey();
+    const signer = await this.walletAccount.getKey();
     const kp = KeyPairEd25519.fromRandom();
-    await this.arena.wallet.batch(this.arena.wallet).addKey(kp.getPublicKey()).transact(signer ?? undefined);
+    await this.walletAccount.batch(this.walletAccount).addKey(kp.getPublicKey()).transact(signer ?? undefined);
     this.commitmentKey = { publicKey: kp.getPublicKey().toString(), secretKey: kp.toString() };
     return this.commitmentKey;
   }
 
   /** NearAccount's provider getter is protected; the Account instance still exposes it at runtime. */
   private sandboxProvider(): SandboxProvider {
-    const walletInternals = this.arena.wallet as unknown as { provider: SandboxProvider };
+    const walletInternals = this.walletAccount as unknown as { provider: SandboxProvider };
     return walletInternals.provider;
   }
 
   /** Deploy + init the forwarder at the wallet once per boot; deploying does not touch FT state. */
   private async ensureForwarder(): Promise<void> {
     if (this.forwarderDeployed) return;
-    await this.arena.wallet.deploy(readFileSync(FORWARDER_WASM));
-    await this.arena.wallet.call(this.arena.wallet, 'new', { ft_account: this.arena.ft.accountId });
+    await this.walletAccount.deploy(readFileSync(FORWARDER_WASM));
+    await this.walletAccount.call(this.walletAccount, 'new', { ft_account: this.arena.ft.accountId });
     this.forwarderDeployed = true;
   }
 
@@ -303,7 +326,7 @@ export class GatewayTarget {
    */
   private async transferSigned(signer: SignerKey, receiver: string, amount: bigint): Promise<SpendTxOutcome> {
     const kp = KeyPair.fromString(signer.secretKey);
-    const nonce = BigInt((await this.arena.wallet.viewAccessKey(this.walletId, kp.getPublicKey())).nonce) + 1n;
+    const nonce = BigInt((await this.walletAccount.viewAccessKey(this.walletId, kp.getPublicKey())).nonce) + 1n;
     const provider = this.sandboxProvider();
     const { header } = await provider.block({ finality: 'final' });
     const action = functionCall('ft_transfer', { receiver_id: receiver, amount: amount.toString() }, DEFAULT_FUNCTION_CALL_GAS, 1n);

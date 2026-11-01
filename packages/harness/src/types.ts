@@ -29,6 +29,8 @@ export interface ArenaEnv {
   wallet: NearAccount;
   attacker: NearAccount;
   recipient: NearAccount;
+  /** A5-only: provisioned (and FT-funded) when the A5 boot requests it. */
+  victim: NearAccount | null;
 }
 
 /** A battery target: gateway-replica (falls by design) or reference-wallet (holds by design). */
@@ -47,11 +49,19 @@ export interface ArenaTarget {
   fireTrigger(): Promise<SpendTxOutcome[]>;
   /** A3: submit an intent under its id — exactly-once settlement is the target's contract (W-3). */
   submitIntent(intentId: string, receiver: string, amount: bigint, signer: SignerKey): Promise<SpendTxOutcome>;
+  /**
+   * A3/A5 setup: the agent proposes a transfer request through the request flow.
+   * Proposing carries no authorization (INV-5) — the owner's approval below is
+   * what makes the intent id settleable on the reference.
+   */
+  createRequest(requestId: string, receiver: string, amount: bigint): Promise<void>;
+  /** A3/A5 setup: the owner approves the request — the INV-5 provenance root. */
+  approveRequest(requestId: string): Promise<void>;
 }
 
 /** Canonical-core fields plus submission-order hashes — everything a receipt is built from. */
 export interface RunResult {
-  attackId: 'A1' | 'A2' | 'A3' | 'A4';
+  attackId: 'A1' | 'A2' | 'A3' | 'A4' | 'A5';
   target: 'gateway' | 'reference';
   verdict: 'hold' | 'fall';
   perAccountDeltas: Array<{ account: string; token: string; delta: string }>;

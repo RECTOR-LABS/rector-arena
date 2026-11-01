@@ -9,7 +9,7 @@ Per-attack specifications A1..A5. Attack IDs are an immutable registry (`PRD.md`
 | `gateway-replica` | **Falls** — exhibits the documented weakness class per attack | TS gateway-side-policy simulation in `targets/gateway-replica` |
 | `reference` | **Holds** — preserves INV-1..INV-5 under every attack | Rust near-sdk contract in `contracts/reference-wallet` |
 
-Target selection: the runner reads env `ARENA_TARGET`; value `gateway` selects `gateway-replica`, value `reference` selects `reference`. Any other value, or an unset variable, aborts the run with a usage error before any account is created.
+Target selection: the runner reads env `ARENA_TARGET`. A set value `gateway` selects `gateway-replica`, value `reference` selects `reference`; unset or empty runs the full battery across BOTH targets in one command (SC-1 in `PRD.md` §7, closed at M3). Any other value aborts the run with a usage error before any account is created.
 
 ## Shared environment (all attacks)
 
@@ -57,7 +57,7 @@ The oracle evaluates the invariant expectation from on-chain state alone. Verdic
 
 - **Goal**: prove whether one intent id can settle twice after an ambiguous outcome (INV-3).
 - **Adversary**: A-counterparty (`docs/THREAT-MODEL.md` §Adversaries).
-- **Setup**: intent I settles 30 to `recipient`. The first attempt is made to return an ambiguous terminal status mirroring the documented `needs_review` class: "execution was interrupted or unresolved and the fund state is unknown … a retry can double-spend" (app.outlayer.ai/docs/agent-custody, cited in `PRD.md` §2; frozen snapshot: docs/quotes/outlayer-agent-custody.md).
+- **Setup**: intent I settles 30 to `recipient`. The agent proposes I through the request flow and the owner approves it (INV-5 provenance — I is a legitimate approved request). The first attempt is made to return an ambiguous terminal status mirroring the documented `needs_review` class: "execution was interrupted or unresolved and the fund state is unknown … a retry can double-spend" (app.outlayer.ai/docs/agent-custody, cited in `PRD.md` §2; frozen snapshot: docs/quotes/outlayer-agent-custody.md).
 - **Steps**:
   1. `agent` submits intent I (30 to `recipient`); the first attempt ends in the ambiguous state after broadcast.
   2. The client retries intent I with identical parameters.

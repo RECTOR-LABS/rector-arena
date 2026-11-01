@@ -1,0 +1,27 @@
+[package]
+name = "attest"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = "=4.1.1"
+borsh = "=0.9.3"
+near-sys = "=0.2.1"
+
+[profile.release]
+opt-level = "z"
+codegen-units = 1
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
+
+# Same wasm-ceiling recipe as contracts/reference-wallet: near-sdk 4.1.1 →
+# near-crypto 0.14 → parity-secp256k1 0.7.0 is yanked on crates.io; patch it
+# from the upstream git tag instead (packages/harness/vendor/PROVENANCE.md).
+[patch.crates-io]
+parity-secp256k1 = { git = "https://github.com/paritytech/rust-secp256k1", tag = "parity-secp256k1-v0.7.0" }

@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
 import type { AccessKey, FinalExecutionOutcome } from 'near-workspaces';
 
 type FunctionCallAccessKeyFn = (receiverId: string, methodNames: string[], allowance?: bigint) => AccessKey;
@@ -37,13 +38,15 @@ export function nearApiInternals(): NearApiInternals {
     signTransaction: SignTransactionFn;
   };
   const nu = fromNearWorkspaces('@near-js/utils') as { baseDecode: BaseDecodeFn };
-  const hashing = fromNearWorkspaces('@noble/hashes/sha256') as { sha256: Sha256Fn };
   internals = {
     functionCallAccessKey: tx.functionCallAccessKey,
     createTransaction: tx.createTransaction,
     signTransaction: tx.signTransaction,
     baseDecode: nu.baseDecode,
-    sha256: hashing.sha256,
+    // The tx-signing path hashes the encoded tx with sha256 before signing; node:crypto
+    // produces the identical digest without resolving @noble/hashes (whose subpath exports
+    // differ across the versions in this dependency tree).
+    sha256: (message: Uint8Array) => new Uint8Array(createHash('sha256').update(message).digest()),
   };
   return internals;
 }

@@ -20,6 +20,12 @@ export async function runA3(arena: ArenaEnv, target: ArenaTarget, targetId: 'gat
     receiverAllowlist: [arena.recipient.accountId],
     perIntentMax: null,
   });
+  // Intent I is a legitimate approved request: the agent proposes it through the request
+  // flow and the owner approves it (INV-5 provenance) — the attack then tests whether the
+  // ambiguous first outcome plus an identical retry can settle it twice (INV-3). Setup
+  // failures invalidate the attack, they never shape the verdict.
+  await target.createRequest(INTENT_ID, arena.recipient.accountId, A3.once);
+  await target.approveRequest(INTENT_ID);
   const [key] = await target.provisionSpendKeys(1);
 
   const recipientBefore = await balanceOf(arena.ft, arena.recipient.accountId);

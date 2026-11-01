@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { JsonRpcProvider, Worker } from 'near-workspaces';
 import type { NearAccount } from 'near-workspaces';
-import { FUND_WALLET, FORK_RPC, FT_WASM, STORAGE_DEPOSIT, TOTAL_SUPPLY } from './config.js';
+import { A5, FUND_WALLET, FORK_RPC, FT_WASM, STORAGE_DEPOSIT, TOTAL_SUPPLY } from './config.js';
 
 process.env.NEAR_CLI_MAINNET_RPC_SERVER_URL ??= FORK_RPC;
 
@@ -69,15 +69,20 @@ function isRetryable(err: unknown): boolean {
 /**
  * Boot a forked sandbox at the pinned height and provision the battery environment:
  * ft/owner/agent/wallet/attacker/recipient + funded FT (docs/ATTACK-BATTERY.md §Shared
- * environment; victim is A5-only and is never provisioned at M1).
+ * environment). `victim` is A5-only: provisioned and FT-funded only when the boot
+ * requests it.
  */
-export async function bootForkedArena(pin: ForkPin, attempts = 4): Promise<{ worker: Worker; arena: ArenaProvisioned }> {
+export async function bootForkedArena(
+  pin: ForkPin,
+  opts: { withVictim?: boolean; attempts?: number } = {},
+): Promise<{ worker: Worker; arena: ArenaProvisioned }> {
+  const attempts = opts.attempts ?? 4;
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     let worker: Worker | null = null;
     try {
       worker = await bootForkedWorker(pin);
-      const arena = await provisionArena(worker);
+      const arena = await provisionArena(worker, opts.withVictim === true);
       return { worker, arena };
     } catch (err) {
       lastErr = err;
@@ -99,9 +104,11 @@ export interface ArenaProvisioned {
   wallet: NearAccount;
   attacker: NearAccount;
   recipient: NearAccount;
+  /** A5-only: null unless the boot requested victim provisioning. */
+  victim: NearAccount | null;
 }
 
-async function provisionArena(worker: Worker): Promise<ArenaProvisioned> {
+async function provisionArena(worker: Worker, withVictim: boolean): Promise<ArenaProvisioned> {
   const root = worker.rootAccount;
   // Deterministic names, created sequentially (same keystore nonce slot — parallel
   // createSubAccount calls from one root race their nonces).
@@ -111,15 +118,22 @@ async function provisionArena(worker: Worker): Promise<ArenaProvisioned> {
   const wallet = await root.createSubAccount('wallet');
   const attacker = await root.createSubAccount('attacker');
   const recipient = await root.createSubAccount('recipient');
+  const victim = withVictim ? await root.createSubAccount('victim') : null;
   await ft.deploy(readFileSync(FT_WASM));
   await ft.call(ft, 'new', {
     owner_id: owner.accountId,
     total_supply: TOTAL_SUPPLY.toString(),
     metadata: { spec: 'ft-1.0.0', name: 'Battery FT', symbol: 'BFT', decimals: 24, reference: null },
   });
-  for (const account of [wallet, recipient, attacker]) {
+  const ftHolders = victim ? [wallet, recipient, attacker, victim] : [wallet, recipient, attacker];
+  for (const account of ftHolders) {
     await account.call(ft, 'storage_deposit', { account_id: account.accountId }, { attachedDeposit: STORAGE_DEPOSIT });
   }
   await owner.call(ft, 'ft_transfer', { receiver_id: wallet.accountId, amount: FUND_WALLET.toString() }, { attachedDeposit: 1n });
-  return { root, ft, owner, agent, wallet, attacker, recipient };
+  if (victim) {
+    // A5: the victim is a target wallet holding its FULL balance
+    // (docs/ATTACK-BATTERY.md §A5-injection-to-payment).
+    await owner.call(ft, 'ft_transfer', { receiver_id: victim.accountId, amount: A5.victimBalance.toString() }, { attachedDeposit: 1n });
+  }
+  return { root, ft, owner, agent, wallet, attacker, recipient, victim };
 }

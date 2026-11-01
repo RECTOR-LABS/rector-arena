@@ -1,0 +1,25 @@
+{
+  "attack_id": "A5",
+  "target": "gateway",
+  "verdict": "fall",
+  "per_account_deltas": [
+    {
+      "account": "victim.test.near",
+      "token": "battery-ft",
+      "delta": "-200000000000000000000000000"
+    },
+    {
+      "account": "attacker.test.near",
+      "token": "battery-ft",
+      "delta": "200000000000000000000000000"
+    }
+  ],
+  "block_heights": [
+    53
+  ],
+  "tx_hashes": [
+    "7xAPCPSkukaSUfBB69WFbufGg5Gr4YhcS3HpfKvbsSrq"
+  ],
+  "ran_at": "2026-11-01T16:50:02Z",
+  "verdict_hash": "30757fe68d3c903abd9e7a829dd5b0eed8c5e025235dc7844e101689b0515311"
+}
