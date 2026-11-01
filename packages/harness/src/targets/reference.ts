@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { KeyPair, KeyPairEd25519, functionCall } from 'near-workspaces';
+import type { NearAccount } from 'near-workspaces';
 import { REFERENCE_WASM, SPEND_GAS } from '../config.js';
 import { heightForOutcome, nearApiInternals, sandboxProviderOf, settleOk } from '../near-internals.js';
 import type { SandboxProvider } from '../near-internals.js';
@@ -54,7 +55,53 @@ export class ReferenceTarget implements ArenaTarget {
   }
 
   async spend(receiver: string, amount: bigint, signer: SignerKey): Promise<SpendTxOutcome> {
-    return this.signedSpend(this.arena.agent.accountId, signer, receiver, amount);
+    return this.signedCall(this.arena.agent.accountId, signer, 'spend', {
+      receiver_id: receiver,
+      amount: amount.toString(),
+      nonce: crypto.randomUUID(),
+    });
+  }
+
+  /**
+   * A2 setup: register the resting commitment (agent identity). Setup txs must
+   * succeed — a failed setup invalidates the attack rather than shaping the
+   * verdict.
+   */
+  async createCommitment(commitmentId: string, receiver: string, amount: bigint): Promise<void> {
+    await this.setupCall(this.arena.agent, 'create_commitment', {
+      commitment_id: commitmentId,
+      receiver_id: receiver,
+      amount: amount.toString(),
+    });
+  }
+
+  /** A2 setup: the owner freezes the policy. */
+  async freeze(): Promise<void> {
+    await this.setupCall(this.arena.owner, 'freeze', {});
+  }
+
+  /**
+   * A2: the trigger condition fires. One on-chain settle attempt — the contract's
+   * settle_commitments, which settles nothing post-freeze because freeze cancelled
+   * the resting set (W-2).
+   */
+  async fireTrigger(): Promise<SpendTxOutcome[]> {
+    const provider = sandboxProviderOf(this.arena.wallet);
+    const r = await this.arena.agent.callRaw(this.arena.wallet, 'settle_commitments', {}, { gas: SPEND_GAS });
+    if (!r.succeeded) {
+      throw new Error('settle_commitments failed on the reference wallet');
+    }
+    return [{ txHash: r.result.transaction.hash, blockHeight: await heightForOutcome(provider, r.result), ok: true }];
+  }
+
+  /** A3: submit the intent under its id; the contract consumes the per-intent receipt exactly once (W-3). */
+  async submitIntent(intentId: string, receiver: string, amount: bigint, signer: SignerKey): Promise<SpendTxOutcome> {
+    return this.signedCall(this.arena.agent.accountId, signer, 'spend_intent', {
+      intent_id: intentId,
+      receiver_id: receiver,
+      amount: amount.toString(),
+      nonce: crypto.randomUUID(),
+    });
   }
 
   async issueFunctionCallKey(allowanceYocto: bigint): Promise<SignerKey> {
@@ -70,22 +117,34 @@ export class ReferenceTarget implements ArenaTarget {
    * (allowlist, per-intent max) rejects it on-chain; ok:false IS the reference hold shape.
    */
   async escapeCall(fc: SignerKey, receiver: string, amount: bigint): Promise<SpendTxOutcome> {
-    return this.signedSpend(this.arena.wallet.accountId, fc, receiver, amount);
+    return this.signedCall(this.arena.wallet.accountId, fc, 'spend', {
+      receiver_id: receiver,
+      amount: amount.toString(),
+      nonce: crypto.randomUUID(),
+    });
+  }
+
+  /** Setup tx: must succeed — a failed setup invalidates the attack. */
+  private async setupCall(caller: NearAccount, method: string, args: Record<string, unknown>): Promise<void> {
+    const r = await caller.callRaw(this.arena.wallet, method, args, { gas: SPEND_GAS });
+    if (!r.succeeded) {
+      throw new Error(`${method} failed on ${this.walletId}`);
+    }
   }
 
   /**
-   * Sign one `spend` call on the wallet with an explicit key and submit it directly. The
+   * Sign one policy call on the wallet with an explicit key and submit it directly. The
    * ignored unique nonce field defeats identical-args coalescing (near-sdk 4.1.1 skips
-   * unknown JSON fields — verified in the M0 record).
+   * unknown JSON fields — verified in the M0 record); A3's identical retry needs it too.
    */
-  private async signedSpend(signerAccount: string, signer: SignerKey, receiver: string, amount: bigint): Promise<SpendTxOutcome> {
+  private async signedCall(signerAccount: string, signer: SignerKey, method: string, args: Record<string, unknown>): Promise<SpendTxOutcome> {
     const kp = KeyPair.fromString(signer.secretKey);
     const nonce = BigInt((await this.arena.wallet.viewAccessKey(signerAccount, kp.getPublicKey())).nonce) + 1n;
     const provider = sandboxProviderOf(this.arena.wallet);
     const { header } = await provider.block({ finality: 'final' });
     const action = functionCall(
-      'spend',
-      { receiver_id: receiver, amount: amount.toString(), nonce: crypto.randomUUID() },
+      method,
+      args,
       SPEND_GAS,
       0n,
     );

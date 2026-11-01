@@ -15,11 +15,11 @@
     }
   ],
   "block_heights": [
-    51
+    50
   ],
   "tx_hashes": [
-    "AMBFWR6TD6NYwHrc1eNJRQUMb8Ag6dGc9uA8zJWfWfrG"
+    "4hx4FvSyavAoDxvA1dqkooWasbwMZ1GUjgVPNMxL7agm"
   ],
-  "ran_at": "2026-11-01T06:00:38Z",
-  "verdict_hash": "d53cd402a34e8820f1048cb75ebbcbbf9cc2c34654d698a8876b371a497a52ca"
+  "ran_at": "2026-11-01T11:06:52Z",
+  "verdict_hash": "cfc799ba3e5aae5a3a55ef133c1f07048a92e27329e2a6261ee9ed35c104e6b2"
 }

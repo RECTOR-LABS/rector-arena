@@ -111,6 +111,9 @@ export class GatewayTarget {
   private policy: Policy | null = null;
   private spent = 0n;
   private forwarderDeployed = false;
+  private frozen = false;
+  private readonly commitments = new Map<string, { receiver: string; amount: bigint }>();
+  private commitmentKey: SignerKey | null = null;
 
   private constructor(arena: ArenaEnv) {
     this.arena = arena;
@@ -195,6 +198,88 @@ export class GatewayTarget {
       { signWithKey: KeyPair.fromString(fc.secretKey) },
     );
     return { txHash: r.result.transaction.hash, blockHeight: await heightForOutcome(this.sandboxProvider(), r.result), ok: r.succeeded };
+  }
+
+  /**
+   * A2 surface: register a resting commitment while unfrozen. Authorization happens ONCE,
+   * at creation — the envelope is checked here and never re-checked at settlement (the
+   * documented gateway weakness: "authorised once, paid out later"). Freezing stops NEW
+   * commitments only.
+   */
+  async createCommitment(commitmentId: string, receiver: string, amount: bigint): Promise<void> {
+    const policy = this.policy;
+    if (policy === null) {
+      throw new Error('setPolicy must be called before createCommitment');
+    }
+    if (this.frozen) {
+      throw new Error('wallet is frozen: new commitments are rejected');
+    }
+    const withinPolicy =
+      this.spent + amount <= policy.velocityCap &&
+      policy.receiverAllowlist.includes(receiver) &&
+      (policy.perIntentMax === null || amount <= policy.perIntentMax);
+    if (!withinPolicy) {
+      throw new Error(`commitment outside the policy envelope: ${commitmentId}`);
+    }
+    await this.ensureCommitmentKey();
+    this.commitments.set(commitmentId, { receiver, amount });
+  }
+
+  /** A2 surface: freeze stops new orders; resting commitments are NOT cancelled (the fall). */
+  async freeze(): Promise<void> {
+    this.frozen = true;
+  }
+
+  /**
+   * A2 surface: the trigger condition fires — the gateway pays every resting commitment
+   * regardless of the freeze. That is the documented fall: "freezing the wallet stops new
+   * orders but does not cancel resting ones".
+   */
+  async fireTrigger(): Promise<SpendTxOutcome[]> {
+    if (this.commitmentKey === null) {
+      throw new Error('no commitment key: createCommitment was never called');
+    }
+    const outcomes: SpendTxOutcome[] = [];
+    for (const commitment of this.commitments.values()) {
+      outcomes.push(await this.transferSigned(this.commitmentKey, commitment.receiver, commitment.amount));
+    }
+    return outcomes;
+  }
+
+  /**
+   * A3 surface: submit an intent under its id. The gateway keeps no per-intent receipts —
+   * the id is accepted and discarded, so a retried intent re-enters the spend path and
+   * settles again (the A3 fall). Policy checks are per-attempt, exactly like spend().
+   */
+  async submitIntent(intentId: string, receiver: string, amount: bigint, signer: SignerKey): Promise<SpendTxOutcome> {
+    void intentId;
+    const policy = this.policy;
+    if (policy === null) {
+      throw new Error('setPolicy must be called before submitIntent');
+    }
+    const spent = this.spent;
+    const withinPolicy =
+      spent + amount <= policy.velocityCap &&
+      policy.receiverAllowlist.includes(receiver) &&
+      (policy.perIntentMax === null || amount <= policy.perIntentMax);
+    if (!withinPolicy) {
+      return { txHash: '', blockHeight: 0, ok: false };
+    }
+    const outcome = await this.transferSigned(signer, receiver, amount);
+    if (outcome.ok) {
+      this.spent = spent + amount;
+    }
+    return outcome;
+  }
+
+  /** Full-access key on the wallet for settling resting commitments (lazily provisioned). */
+  private async ensureCommitmentKey(): Promise<SignerKey> {
+    if (this.commitmentKey !== null) return this.commitmentKey;
+    const signer = await this.arena.wallet.getKey();
+    const kp = KeyPairEd25519.fromRandom();
+    await this.arena.wallet.batch(this.arena.wallet).addKey(kp.getPublicKey()).transact(signer ?? undefined);
+    this.commitmentKey = { publicKey: kp.getPublicKey().toString(), secretKey: kp.toString() };
+    return this.commitmentKey;
   }
 
   /** NearAccount's provider getter is protected; the Account instance still exposes it at runtime. */

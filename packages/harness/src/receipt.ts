@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { A1_SLUG, A4_SLUG, RECEIPTS_DIR } from './config.js';
+import { A1_SLUG, A2_SLUG, A3_SLUG, A4_SLUG, RECEIPTS_DIR } from './config.js';
 import type { RunResult } from './types.js';
 
 export type ReceiptCore = Pick<RunResult, 'attackId' | 'target' | 'verdict' | 'perAccountDeltas' | 'blockHeights'>;
@@ -46,9 +46,10 @@ export function buildReceipt(run: RunResult): Receipt {
   };
 }
 
+const SLUGS: Record<RunResult['attackId'], string> = { A1: A1_SLUG, A2: A2_SLUG, A3: A3_SLUG, A4: A4_SLUG };
+
 export function receiptPath(run: RunResult, id: string): string {
-  const slug = run.attackId === 'A1' ? A1_SLUG : A4_SLUG;
-  return join(RECEIPTS_DIR, slug, `${run.target}-${id}.json`);
+  return join(RECEIPTS_DIR, SLUGS[run.attackId], `${run.target}-${id}.json`);
 }
 
 export function writeReceipt(run: RunResult): { path: string; receipt: Receipt } {

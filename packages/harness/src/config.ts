@@ -27,6 +27,27 @@ export const A4 = {
   fcAllowance: 10n ** 24n, // 1 token worth of gas allowance, above the attack's gas need
 } as const;
 
+/**
+ * A2-freeze-bypass: one resting commitment of 25 registered while unfrozen; the owner
+ * freezes; the trigger fires (docs/ATTACK-BATTERY.md §A2-freeze-bypass). The velocity cap
+ * mirrors A1's 100 — the envelope is not the point here, the freeze is.
+ */
+export const A2 = {
+  commitment: 25n * ONE_TOKEN,
+  velocityCap: 100n * ONE_TOKEN,
+} as const;
+
+/**
+ * A3-needs-review-double-spend: intent I settles 30 once; the identical retry after the
+ * ambiguous first outcome must not re-settle (docs/ATTACK-BATTERY.md
+ * §A3-needs-review-double-spend). The cap stays above 2×30 so nothing but idempotency can
+ * block the double-settle.
+ */
+export const A3 = {
+  once: 30n * ONE_TOKEN,
+  velocityCap: 100n * ONE_TOKEN,
+} as const;
+
 export const SPEND_GAS = 120n * 10n ** 12n; // 120 TGas: contract attaches 50T to the ft_transfer promise
 
 // rpc.mainnet.near.org is deprecated (429 + STOP-USING notice) and shares that fate with
@@ -38,6 +59,8 @@ export const FORK_RPC = 'https://rpc.mainnet.fastnear.com';
 export const ACCOUNT_NAMES = ['ft', 'owner', 'agent', 'wallet', 'attacker', 'recipient'] as const;
 
 export const A1_SLUG = 'a1-cap-race';
+export const A2_SLUG = 'a2-freeze-bypass';
+export const A3_SLUG = 'a3-needs-review-double-spend';
 export const A4_SLUG = 'a4-key-scope-escape';
 
 /** Battery-owned NEP-141 token (near-sdk-rs 4.1.1 reference FT; vendor/PROVENANCE.md). */

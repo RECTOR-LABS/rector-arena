@@ -25,15 +25,15 @@
     57
   ],
   "tx_hashes": [
-    "7VL2o1xS45FEmaZJTRL94aU11MRMPeRqRoqasAz5NTi5",
-    "6adUtufot5P7AyJM2Xxsqo8cBc2j2yKZFZCcj4LdF2GJ",
-    "4kw4CM5bnFMagrrtnAcSbLuEXNzogyR8jRQJBRbv2UsU",
-    "48wK9tGqNS4b5643apLk8LkCegXWgLCtk6k7h4Pr5yyK",
-    "CcRbrZgmaLR1bNsrawfQqRHDXfHEi14Nd3VihQ1LnRmH",
-    "CNJkDH2Agg74a2iaKCPGV1tgVG6JHAFxJYPfn9xA33L2",
-    "CfA7bX1jHVJPpw6PbNBzkGQVe2UfykkWUALS1iWup2jp",
-    "4ZXmKStmKaQHU7yqweMMaXCnUUJdHkVD4BqNKKjwheXV"
+    "ExXwrTSmdGqRcdQE2EkPqxHTLRDKZUg9bQKH26nrJHfS",
+    "5dwCwymi3uTJ823NArVZ8Tnx9MUE7a5vzmMMeYL76BkX",
+    "DMQizSvoDRmEVzrjLK4T39dj9if51X74aYP5gBAcvz5",
+    "FRvE9iyt1i7Jc7w2VqekXg6yT6FR7yEwDrdwX295nx8u",
+    "7rtWcD5n8z8yCFUb57Wif7rp19ozaJ52g9JdFSWYDzRm",
+    "FMtPXJAnb3bsnUMiGP7vAWsktzqbqoan3c5wVTg4taTG",
+    "Bk9kc9YQ2q3fMJe8gAQcJmRbjU1YZVpnvM92d1oTjnDF",
+    "c8rYiGX2DTKQ1vBXB668scKMB9PzfXccwZaB2weB7Uh"
   ],
-  "ran_at": "2026-11-01T05:57:32Z",
+  "ran_at": "2026-11-01T11:01:17Z",
   "verdict_hash": "5b061574a0893d8b8bdba5752902dd499aed52358b732bcb13b37de3bb98a701"
 }

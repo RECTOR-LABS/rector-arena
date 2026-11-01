@@ -32,4 +32,20 @@ export class GatewayTargetAdapter implements ArenaTarget {
   escapeCall(fc: SignerKey, receiver: string, amount: bigint): Promise<SpendTxOutcome> {
     return this.inner.escapeCall(fc, receiver, amount);
   }
+
+  createCommitment(commitmentId: string, receiver: string, amount: bigint): Promise<void> {
+    return this.inner.createCommitment(commitmentId, receiver, amount);
+  }
+
+  freeze(): Promise<void> {
+    return this.inner.freeze();
+  }
+
+  fireTrigger(): Promise<SpendTxOutcome[]> {
+    return this.inner.fireTrigger();
+  }
+
+  submitIntent(intentId: string, receiver: string, amount: bigint, signer: SignerKey): Promise<SpendTxOutcome> {
+    return this.inner.submitIntent(intentId, receiver, amount, signer);
+  }
 }
