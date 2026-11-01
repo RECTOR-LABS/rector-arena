@@ -23,8 +23,8 @@ If single-maintainer bandwidth forces cuts, the cut order is A5, then A3, then A
 
 Filled at M0 close, before M1 starts (the M0 acceptance gate lives in the table above):
 
-- Fork decision: `unverified — confirm at implementation` (resolver: M0 spike, recorded here)
-- Per-tx simulation p95: `unverified — confirm at implementation` (resolver: M0 spike, recorded here)
-- Node startup time: `unverified — confirm at implementation` (resolver: M0 spike, recorded here)
-- near-workspaces version pin: `unverified — confirm at implementation` (resolver: M0 spike; pin lands in `packages/harness/package.json` at M1)
-- FR-11 verdict-hash determinism: `unverified — confirm at implementation` (resolver: M0 spike, recorded here — two runs of one attack at the same fork block height must produce equal verdict hashes; this record pins the canonical core field set)
+- Fork decision: mainnet-RPC fork via near-workspaces `importContract` (`wrap.near` wasm at block 222518565, `withData: false` — public-RPC live-state import is capped at 50 kB, battery state is battery-owned per PRD.md §8); fork-data endpoint `https://rpc.mainnet.fastnear.com` — `rpc.mainnet.near.org` is deprecated and answers heavy queries with 429 + a stop-using notice, so `packages/harness/src/spike/m0.ts` pins near-workspaces' `NEAR_CLI_MAINNET_RPC_SERVER_URL` hook; testnet fallback not exercised.
+- Per-tx simulation p95: 2021 ms (nearest-rank over 20 settle transactions on the forked worker; single e2e NEP-141 transfer verified `ft_balance_of(recipient)` == 1e24). Gate input PASS.
+- Node startup time: 528 ms (worst of 3 cold boots; samples 517, 528, 516 ms; sandbox binary download excluded via one un-timed warm-up boot at 554 ms). Gate input PASS.
+- near-workspaces version pin: 5.0.0 (resolved by M0; pin lands in `packages/harness/package.json` at M1).
+- FR-11 verdict-hash determinism: equal — two A1-cap-race-shape runs at one fork block height produced identical verdict hashes (sha256 `076eb0c74e5df576d8abbb5cd199f90f6f2be75ae43f6ccbc969fb4172997bd0`, reproduced unchanged across sessions); canonical core field set pinned: `attack_id`, `target`, `verdict`, `per_account_deltas`, `block_heights`; `ran_at` and `tx_hashes` excluded per docs/ARCHITECTURE.md §Receipt schema; no field drop required. Probe shape note: near-workspaces coalesced the 8 concurrent `callRaw` submissions into one transaction per run (settled 20 tokens, verdict hold — hash determinism unaffected), so A1 at M1 signs its parallel spends with distinct access keys to exercise the race. M0 operational finding: wasm emitted by rustc ≥ 1.86 or near-sdk ≥ 5.x fails the sandbox prepare step (near-sandbox 0.1.5, neard 2.6.2) — the vendored FT is near-sdk-rs 4.1.1 built per `packages/harness/vendor/PROVENANCE.md`.
