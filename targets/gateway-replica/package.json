@@ -1,0 +1,15 @@
+{
+  "name": "@rector-arena/gateway-replica",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p . --noEmit"
+  },
+  "dependencies": {
+    "near-workspaces": "5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5"
+  }
+}

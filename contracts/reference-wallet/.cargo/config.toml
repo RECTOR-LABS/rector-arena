@@ -1,0 +1,6 @@
+# pnpm sanitizes RUSTFLAGS out of script env, so the flag must live here.
+# near-sandbox 0.1.5 (neard 2.6.2) prepare rejects modules declaring
+# bulk-memory-opt / call-indirect-overlong / nontrapping-fptoint; pin the
+# wasm feature set the sandbox accepts (PROVENANCE.md compatibility law).
+[build]
+rustflags = ["-C", "target-feature=-reference-types"]

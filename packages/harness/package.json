@@ -2,8 +2,12 @@
   "name": "@rector-arena/harness",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "tsc -p . --noEmit"
+  },
   "dependencies": {
-    "near-workspaces": "^5.0.0"
+    "near-workspaces": "5.0.0",
+    "@rector-arena/gateway-replica": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",

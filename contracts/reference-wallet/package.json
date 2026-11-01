@@ -1,0 +1,7 @@
+{
+  "name": "@rector-arena/reference-wallet",
+  "private": true,
+  "scripts": {
+    "build": "env -u RUSTFLAGS cargo +1.85 build --release --target wasm32-unknown-unknown && mkdir -p wasm && cp target/wasm32-unknown-unknown/release/reference_wallet.wasm wasm/"
+  }
+}

@@ -7,6 +7,15 @@
     "typescript": "^5"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "near-sandbox", "near-workspaces", "secp256k1"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "near-sandbox",
+      "near-workspaces",
+      "secp256k1"
+    ]
+  },
+  "scripts": {
+    "arena:run": "tsx packages/harness/src/run.ts",
+    "build": "pnpm -r build"
   }
 }
