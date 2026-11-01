@@ -49,3 +49,28 @@ Created by docs/plans/M3-settlement-proof.md (work-breakdown steps 4 and 9). All
 **Runner/amendment note (SC-1).** The Targets registry (docs/ATTACK-BATTERY.md) is amended as of M3: unset or empty `ARENA_TARGET` runs the full battery across BOTH targets in one command; a set value keeps the M1 single-target semantics; any other value aborts with a usage error before account creation. The authoritative run produced 10 receipts and `full_battery_gate=PASS` (gateway: A1 160 / A2 25 / A3 60 / A4 50 / A5 200 all fall; reference: A1 100 / A2 0 / A3 30 / A4 0 / A5 0 all hold; FR-11 equal on both targets; W-5 ok; SC-2 ok).
 
 **Canonical-core amendment (2026-11-02, recorded per the FR-11 procedure above).** `block_heights` is REMOVED from the canonical core: two same-height gateway A1 runs produced unequal verdict hashes because sandbox block scheduling split the 8 concurrent settle txs across blocks differently between in-process runs (observed once in a fresh-clone run after fb9d981; the gateway's fall shape itself — all 8 spends reading the same pre-spend counter — stays structurally deterministic, as do the reference deltas). The core is now `attack_id`, `target`, `verdict`, `per_account_deltas` (docs/ARCHITECTURE.md §Receipt schema). Consequence handled at M3: all 10 authoritative receipts were regenerated under the amended core and re-attested on a fresh contract account (`attest-3.arena-attest.testnet`), because the attest contract's tamper lock correctly refuses a different hash for an attested cell.
+
+## M4 record
+
+Created by docs/plans/M4-proof-public-flip.md. All values measured 2026-11-02.
+
+**Machine-proof (FR-10, SC-4).**
+
+- `pnpm arena:prove` (packages/harness/src/prove.ts) enforces four checks over README.md: (1) every claim line — any line that is not a heading, fenced block, image, blank line, table header/separator row, or the Novelty-claim blockquote — carries at least one artifact link (an existing in-repo file under `receipts/` or `docs/`, or the root PRD.md / AGENTS.md / LICENSE); (2) every receipt JSON under `receipts/` is linked by at least one claim; (3) the README "## Novelty claim" blockquote equals the docs/NOVELTY-POSITIONING.md §Claim blockquote verbatim; (4) any repo-relative link that does not resolve to an existing file fails outright. Measured: PASS — 26 claims, all artifact-linked; 10/10 receipts covered; novelty verbatim. Negative-tested the same day: unlinked claim, novelty drift, unlinked receipt, and dangling link each exit 1 with a line-numbered message.
+- README.md rewritten to the machine-reader shape (docs/HACKATHON-EVENT.md rule Q-017: what it is, the problem, do-X-see-Y try-steps; no marketing): results table linking all 10 receipts with the measured oracle pairs, attestation-verification walk-through, verbatim novelty claim, documentation map. The banned-hedge gate over README.md + PRD.md + docs/ measures zero hits at M4 close.
+
+**Leaderboard (docs/ARCHITECTURE.md §Package tree).**
+
+- packages/web (Next.js 16.4.3, React 19.3.1, Tailwind 4.3.3, TypeScript strict) renders one row per attack with a verdict cell per target: verdict, humanized settled total, receipt link, ran_at, recomputed-canonical-core integrity state, and live attestation state. `pnpm arena:web` serves it.
+- Observed 2026-11-02: all 10 committed receipts rendered, 10/10 attestation cells match on-chain (`get_attestation` on `attest-ledger.testnet` via rpc.testnet.fastnear.com, fallback rpc.testnet.near.org), `attestation_count` 10; RPC-unreachable renders the graceful per-cell state without crashing. `next build` performs no fs/RPC work (route `/` is server-rendered on demand).
+
+**Quote re-check (docs/plans/M4-proof-public-flip.md step 4).**
+
+- The three PRD.md §2 anchors are character-identical (modulo the documented emphasis-strip and ` …` truncation transforms) to BOTH the frozen snapshot (docs/quotes/outlayer-agent-custody.md) and the live page (app.outlayer.ai/docs/agent-custody, re-fetched 2026-11-02). The live page gained an unrelated "Transfer inside Intents" section and re-nested headings since the 2026-10-31 fetch; the three quoted sections are unchanged. The fourth §2 quote (hackathon build theme) matches the verbatim copy in docs/HACKATHON-EVENT.md.
+- One transcription deviation found and fixed in the same pass: PRD.md §2 quote 2 opened with capital "Freezing" where the source reads lowercase "freezing" — lowercased (RECTOR-approved at the M4 gate).
+
+**Public flip (docs/HACKATHON-EVENT.md Submission checklist item 1).**
+
+- RECTOR-LABS/rector-arena flipped public on 2026-11-02 (RECTOR-approved at execution; spec window 2026-11-11 → 2026-11-12, hard deadline 2026-11-14T23:59:00Z — 12 days of margin). Logged-out reachability verified: https://github.com/RECTOR-LABS/rector-arena returns 200 unauthenticated. No secrets are tracked (FR-9: the per-repo `.env` is gitignored; the repository carries only sandbox/testnet public data).
+
+**Full-battery re-run at M4 close (clean `receipts/`, `ARENA_ATTEST` unset).** Exit 0, `receipts=10`, `full_battery_gate=PASS`; gateway A1 160 / A2 25 / A3 60 / A4 50 / A5 200 all fall; reference A1 100 / A2 0 / A3 30 / A4 0 / A5 0 all hold; FR-11 equal on both targets at fork height 222603395; W-5 ok; SC-2 ok; `pnpm -r build` exit 0 across all six workspace projects. The committed receipt evidence is unchanged — restored after the re-run.
