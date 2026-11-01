@@ -1,0 +1,12 @@
+{
+  "name": "rector-arena",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "devDependencies": {
+    "tsx": "^4",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "near-sandbox", "near-workspaces", "secp256k1"]
+  }
+}
