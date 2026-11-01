@@ -79,3 +79,5 @@ The M0 spike (`docs/ROADMAP.md` M0) decides mainnet-RPC fork vs testnet fork and
 `pnpm arena:run` executes the full battery one-command in a clean environment with no secrets (FR-9, SC-1 in `PRD.md`). `ARENA_TARGET` selects the target per `docs/ATTACK-BATTERY.md` §Targets registry. Attestation is off unless `ARENA_ATTEST=1` is set.
 
 `pnpm arena:prove` executes the machine-proof check (FR-10, SC-4 in `PRD.md`): it parses `README.md` and fails on any claim without a link to a receipt under `receipts/` or a document under `docs/`.
+
+`pnpm arena:web` serves the `packages/web` leaderboard (§Package tree) over the committed receipts and the live `get_attestation` view on the attest contract.
