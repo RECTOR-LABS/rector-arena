@@ -4,8 +4,9 @@ import path from "node:path";
 
 import type { AttestationState } from "./attest";
 
-// The app runs with cwd = packages/web, so receipts live two levels up.
-const RECEIPTS_DIR = path.resolve(process.cwd(), "..", "..", "receipts");
+// Receipts are copied into public/receipts by scripts/copy-receipts.mjs (chained
+// into dev/build), so the same path serves local dev and a hosted deploy.
+const RECEIPTS_DIR = path.resolve(process.cwd(), "public", "receipts");
 
 const ATTACKS = [
   { id: "A1", slug: "a1-cap-race", name: "cap race" },
