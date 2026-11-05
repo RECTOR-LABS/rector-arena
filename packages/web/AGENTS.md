@@ -7,3 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Hosted deploy
+
+Production deploys run from the repo root as a flat upload of this package — `vercel deploy packages/web --prod`. The project has no `rootDirectory` set on purpose: Vercel's rootDirectory-monorepo path builds fine but never attaches the app function for this Next version (statics serve, `/` 404s). Receipts ride in via the committed `packages/web/public/receipts` snapshot; when the monorepo source is absent at build time, `scripts/copy-receipts.mjs` keeps the snapshot instead of failing. Never run a bare `vercel deploy --prod` from the repo root — it uploads the monorepo root, which is not a Next app.
