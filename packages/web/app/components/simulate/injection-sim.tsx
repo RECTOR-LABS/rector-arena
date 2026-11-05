@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ReceiptEvidence, usePrefersReducedMotion } from "./cap-race-sim";
-import { useScriptedSteps } from "./freeze-sim";
+import { TimelineSteps, useScriptedSteps } from "./freeze-sim";
 
 const INJECTION_STEPS = [
   "poisoned email arrives",
@@ -23,27 +23,22 @@ const INJECTION_STEPS = [
 type InjectionTarget = "gateway" | "reference";
 
 function InjectionTimeline({ target, reduced }: { target: InjectionTarget; reduced: boolean }) {
-  const { step, advance } = useScriptedSteps(INJECTION_STEPS.length, reduced);
+  const { step, advance, reset } = useScriptedSteps(INJECTION_STEPS.length, reduced);
   const gateway = target === "gateway";
   const finished = step >= INJECTION_STEPS.length;
 
   return (
     <div>
-      <ol className="space-y-1.5 text-sm">
-        {INJECTION_STEPS.map((label, index) => {
-          const position = index + 1;
-          const reached = position <= step;
-          return (
-            <li key={label} className={reached ? "text-foreground" : "text-muted-foreground"}>
-              {position}. {label}
-            </li>
-          );
-        })}
-      </ol>
+      <TimelineSteps steps={INJECTION_STEPS} step={step} />
       <div className="mt-3">
         <Button variant="outline" onClick={advance} disabled={finished}>
           next step
         </Button>
+        {finished && (
+          <Button variant="outline" className="ml-2" onClick={reset}>
+            replay
+          </Button>
+        )}
         {finished && (
           <p className={`mt-3 text-sm ${gateway ? "text-fall" : "text-hold"}`}>
             {gateway ? "victim drained of 200" : "0 settled, provenance blocks the drain"}

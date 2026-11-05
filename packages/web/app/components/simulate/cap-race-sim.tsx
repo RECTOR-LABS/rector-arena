@@ -105,9 +105,10 @@ export default function CapRaceSim({
   }, [n, pageVisible, reduced, shown]);
 
   useEffect(() => {
-    const onVisibility = () => setPageVisible(document.visibilityState === "visible");
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    const apply = () => setPageVisible(document.visibilityState === "visible");
+    apply();
+    document.addEventListener("visibilitychange", apply);
+    return () => document.removeEventListener("visibilitychange", apply);
   }, []);
 
   const landed = Math.min(n, REFERENCE_LANDED);

@@ -25,21 +25,30 @@ const STEP_MS = 900;
 type FreezeTarget = "gateway" | "reference";
 
 /**
- * Shared scripted-timeline state: auto-advances every STEP_MS, a manual advance
- * reschedules, and the effect cleanup clears the pending timer on unmount (tab
- * panels unmount on tab switch, so a switch stops the clock too). Reduced
- * motion jumps straight to the last step and never schedules.
+ * Shared scripted-timeline state: auto-advances every STEP_MS while the page
+ * is visible, a manual advance reschedules, and the effect cleanup clears the
+ * pending timer on unmount (tab panels unmount on tab switch, so a switch
+ * stops the clock too). Reduced motion jumps straight to the last step and
+ * never schedules.
  */
 export function useScriptedSteps(stepCount: number, reducedMotion: boolean) {
   const [step, setStep] = useState(1);
+  const [pageVisible, setPageVisible] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const apply = () => setPageVisible(document.visibilityState === "visible");
+    apply();
+    document.addEventListener("visibilitychange", apply);
+    return () => document.removeEventListener("visibilitychange", apply);
+  }, []);
 
   useEffect(() => {
     if (reducedMotion) {
       setStep(stepCount);
       return;
     }
-    if (step >= stepCount) return;
+    if (!pageVisible || step >= stepCount) return;
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
       setStep((value) => Math.min(value + 1, stepCount));
@@ -50,16 +59,18 @@ export function useScriptedSteps(stepCount: number, reducedMotion: boolean) {
         timerRef.current = null;
       }
     };
-  }, [reducedMotion, step, stepCount]);
+  }, [pageVisible, reducedMotion, step, stepCount]);
 
   const advance = useCallback(() => {
     setStep((value) => Math.min(value + 1, stepCount));
   }, [stepCount]);
 
-  return { step, advance };
+  const reset = useCallback(() => setStep(1), []);
+
+  return { step, advance, reset };
 }
 
-function TimelineSteps({
+export function TimelineSteps({
   steps,
   step,
 }: {
@@ -82,7 +93,7 @@ function TimelineSteps({
 }
 
 function FreezeTimeline({ target, reduced }: { target: FreezeTarget; reduced: boolean }) {
-  const { step, advance } = useScriptedSteps(FREEZE_STEPS.length, reduced);
+  const { step, advance, reset } = useScriptedSteps(FREEZE_STEPS.length, reduced);
   const gateway = target === "gateway";
   const finished = step >= FREEZE_STEPS.length;
 
@@ -93,6 +104,11 @@ function FreezeTimeline({ target, reduced }: { target: FreezeTarget; reduced: bo
         <Button variant="outline" onClick={advance} disabled={finished}>
           next step
         </Button>
+        {finished && (
+          <Button variant="outline" className="ml-2" onClick={reset}>
+            replay
+          </Button>
+        )}
         {finished && (
           <p className={`mt-3 text-sm ${gateway ? "text-fall" : "text-hold"}`}>
             {gateway ? "25 settled post-freeze" : "0 settled post-freeze"}
