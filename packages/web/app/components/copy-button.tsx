@@ -31,7 +31,7 @@ export function CopyButton({ text, label = "copy" }: { text: string; label?: str
       variant="outline"
       size="sm"
       onClick={() => void copy()}
-      aria-label={label}
+      aria-live="polite"
       className="disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
     >
       {state === "copied" ? "copied" : state === "failed" ? "copy failed" : label}
