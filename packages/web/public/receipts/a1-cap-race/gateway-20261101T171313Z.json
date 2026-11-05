@@ -1,0 +1,39 @@
+{
+  "attack_id": "A1",
+  "target": "gateway",
+  "verdict": "fall",
+  "per_account_deltas": [
+    {
+      "account": "wallet.test.near",
+      "token": "battery-ft",
+      "delta": "-160000000000000000000000000"
+    },
+    {
+      "account": "recipient.test.near",
+      "token": "battery-ft",
+      "delta": "160000000000000000000000000"
+    }
+  ],
+  "block_heights": [
+    57,
+    57,
+    57,
+    57,
+    57,
+    57,
+    57,
+    57
+  ],
+  "tx_hashes": [
+    "7BiJKDrpN2jvijiMPPmyHRokHTLgfRK7dJ7Ne3kfEW3S",
+    "GjeXztFZaCACRyhBo3jr7TrNCJMCh7eAvxYaNArqqmQy",
+    "FtS6hGwii5a8GyzvnL4z8gJeBJSq9MFYRSwsrNWoTsFw",
+    "7haUvVVhMCoJ2avkYsW6L1PkuyC5XX1c1jrFUqeJGfWn",
+    "EarBDTofnnwrvLrGUWzqyYSfVyw8dgsP1cRVHo4aVVms",
+    "BjEpKWVHntLFQakeEggEfApnQZcc3eRSNfmWtStutnsy",
+    "78rhmL3sfhmXBushdtHbT8douC34R8sQ1zor8QHfZ3A4",
+    "68wSw2YVq2hwn9X4KVYt4mZj3yHti6rZ2zTheP3w1uYU"
+  ],
+  "ran_at": "2026-11-01T17:13:13Z",
+  "verdict_hash": "7343f7caf9735b8461c41d0a1f5482211d73b02b3569d1c22be846dfcb053d20"
+}

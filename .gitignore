@@ -8,4 +8,5 @@ coverage/
 *.tsbuildinfo
 .DS_Store
 .omp/plans/
-packages/web/public/receipts/
+.vercel/
+.env*

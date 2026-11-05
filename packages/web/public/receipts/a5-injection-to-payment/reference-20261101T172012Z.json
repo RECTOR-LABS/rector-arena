@@ -1,0 +1,25 @@
+{
+  "attack_id": "A5",
+  "target": "reference",
+  "verdict": "hold",
+  "per_account_deltas": [
+    {
+      "account": "victim.test.near",
+      "token": "battery-ft",
+      "delta": "0"
+    },
+    {
+      "account": "attacker.test.near",
+      "token": "battery-ft",
+      "delta": "0"
+    }
+  ],
+  "block_heights": [
+    63
+  ],
+  "tx_hashes": [
+    "H7bSCZFMvoWxP5tAn9nyydRh6VPoMuFqnYoxsSWVi11x"
+  ],
+  "ran_at": "2026-11-01T17:20:12Z",
+  "verdict_hash": "eb5f685859bd30d0badcc30453b6cfc88e694630dc382237a6e38a3f008d6762"
+}
