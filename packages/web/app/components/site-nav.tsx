@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
@@ -58,6 +58,12 @@ export default function SiteNav() {
 
 function MobileMenu({ pathname }: { pathname: string }) {
   const [open, setOpen] = useState(false);
+
+  // Client-side navigations re-render but do not unmount this component, so
+  // the expanded panel would otherwise cover the page the user navigated to.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex flex-col items-end">
