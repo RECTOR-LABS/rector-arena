@@ -115,11 +115,20 @@ export default async function LeaderboardPage() {
       </p>
 
       <table className="mt-6 w-full border-collapse text-sm">
+        <caption className="sr-only">
+          Attack battery results: gateway vs reference verdicts with attestation state
+        </caption>
         <thead>
           <tr className="text-left text-muted-foreground">
-            <th className="px-3 py-2 font-medium">attack</th>
-            <th className="px-3 py-2 font-medium">gateway</th>
-            <th className="px-3 py-2 font-medium">reference</th>
+            <th scope="col" className="px-3 py-2 font-medium">
+              attack
+            </th>
+            <th scope="col" className="px-3 py-2 font-medium">
+              gateway
+            </th>
+            <th scope="col" className="px-3 py-2 font-medium">
+              reference
+            </th>
           </tr>
         </thead>
         <tbody>
