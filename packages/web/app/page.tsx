@@ -35,6 +35,10 @@ export default async function LandingPage() {
     reference: toPlainCell(row.cells.reference),
   }));
 
+  const allAttested = plainRows.every(
+    (row) => row.gateway?.attestation === "match" && row.reference?.attestation === "match",
+  );
+
   return (
     <main className="py-12">
       <section className="pt-4">
@@ -57,11 +61,24 @@ export default async function LandingPage() {
       <VerdictSequencer rows={plainRows} />
 
       <p className="mt-8 text-sm text-muted-foreground">
-        {plainRows.length * 2} receipts, every verdict hash attested on attest-ledger.testnet,{" "}
-        <Link className="text-primary hover:underline" href="/verify">
-          recompute them yourself
-        </Link>
-        .
+        {plainRows.length * 2} receipts,{" "}
+        {allAttested ? (
+          <>
+            every verdict hash attested on attest-ledger.testnet,{" "}
+            <Link className="text-primary hover:underline" href="/verify">
+              recompute them yourself
+            </Link>
+            .
+          </>
+        ) : (
+          <>
+            live attestation view degraded right now, per-cell states on the{" "}
+            <Link className="text-primary hover:underline" href="/leaderboard">
+              leaderboard
+            </Link>
+            .
+          </>
+        )}
       </p>
     </main>
   );
