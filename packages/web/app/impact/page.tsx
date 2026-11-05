@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "rector-arena: Impact",
+  description:
+    "The documented agent-wallet custody gap, the five invariants that close it, and free verification for every verdict hash.",
+};
 
 const GITHUB = "https://github.com/RECTOR-LABS/rector-arena/blob/main";
 

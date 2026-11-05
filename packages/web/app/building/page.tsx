@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 const GH = "https://github.com/RECTOR-LABS/rector-arena/blob/main";
@@ -23,8 +24,8 @@ function C({ children }: { children: React.ReactNode }) {
   return <code className="text-foreground">{children}</code>;
 }
 
-export const metadata = {
-  title: "Build on it: rector-arena",
+export const metadata: Metadata = {
+  title: "rector-arena: Build on it",
   description:
     "Extend the arena: add a target, add an attack, and rely on FR-11 determinism.",
 };
