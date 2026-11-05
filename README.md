@@ -209,7 +209,7 @@ Each step is a command and its observable result — hackathon screening runs ma
    ✓ Ready in 179ms
    ```
 
-   Open `http://localhost:3000` — 10 receipts rendered, 10/10 attestation cells match on-chain, per the M4 record in [docs/ROADMAP.md](docs/ROADMAP.md). The same leaderboard runs hosted at **https://arena.rectorspace.com** — same committed receipts, same recomputed integrity state, live attestation view:
+   Open `http://localhost:3000/leaderboard` — 10 receipts rendered, 10/10 attestation cells match on-chain, per the M4 record in [docs/ROADMAP.md](docs/ROADMAP.md). The same leaderboard runs hosted at **https://arena.rectorspace.com/leaderboard** — same committed receipts, same recomputed integrity state, live attestation view:
 
    ![rector-arena web leaderboard — 10 receipts, 10 on-chain attestations, all integrity ok](assets/web-leaderboard.png)
 

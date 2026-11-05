@@ -10,3 +10,6 @@ coverage/
 .omp/plans/
 .vercel/
 .env*
+
+# Hallmark build-process cache (preflight, shots, log)
+.hallmark/
