@@ -117,7 +117,7 @@ export default function HowItWorksPage() {
           <code className="bg-muted px-1">ARENA_TARGET=gateway|reference</code> runs a single target.
           Unset, the harness runs the full battery on both. A set but unknown value exits with code 2
           before any account creation (
-          <a className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/run.ts`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/run.ts`}>
             packages/harness/src/run.ts
           </a>
           ). The gateway-replica falls every attack; the reference holds.
@@ -129,7 +129,7 @@ export default function HowItWorksPage() {
         <p className="mt-2">
           Verdicts read on-chain state alone (W-5): <code className="bg-muted px-1">ft_balance_of</code>{" "}
           for token balances and view calls for account state, never logs or events (
-          <a className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/oracle.ts`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/oracle.ts`}>
             packages/harness/src/oracle.ts
           </a>
           ).
@@ -141,7 +141,7 @@ export default function HowItWorksPage() {
         <p className="mt-2">
           The sandbox boots from a mainnet RPC fork, a decision recorded in the M0 spike record.
           Node startup 528 ms against the 120 s budget. Per-tx p95 2021 ms against the 5 s budget (
-          <a className="text-primary hover:underline" href={`${GITHUB}/docs/ROADMAP.md`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/docs/ROADMAP.md`}>
             docs/ROADMAP.md
           </a>
           ).

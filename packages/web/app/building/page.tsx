@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 const GH = "https://github.com/RECTOR-LABS/rector-arena/blob/main";
 
@@ -11,12 +10,14 @@ function A({
   children: React.ReactNode;
 }) {
   return (
-    <Link
+    <a
       href={href}
+      target="_blank"
+      rel="noreferrer"
       className="text-primary underline underline-offset-2 hover:no-underline"
     >
       {children}
-    </Link>
+    </a>
   );
 }
 

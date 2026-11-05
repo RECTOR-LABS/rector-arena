@@ -66,7 +66,7 @@ function AttackCard({ row }: { row: AttackRow }) {
       <CardContent className="space-y-4">
         <p className="text-sm">
           adversary{" "}
-          <a className="text-primary hover:underline" href={THREAT_MODEL_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={THREAT_MODEL_URL}>
             {copy.adversary}
           </a>
         </p>
@@ -78,6 +78,8 @@ function AttackCard({ row }: { row: AttackRow }) {
         </div>
         <p className="text-sm">
           <a
+            target="_blank"
+            rel="noreferrer"
             className="text-primary hover:underline"
             href={`https://github.com/RECTOR-LABS/rector-arena/blob/main/docs/ATTACK-BATTERY.md#${copy.specAnchor}`}
           >

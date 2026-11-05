@@ -41,7 +41,7 @@ export default function ImpactPage() {
           Agent-wallet custody docs publish best-effort guardrail semantics, so builders inherit
           vague guarantees instead of tested ones. The concrete failure classes are documented in
           the partner&apos;s own words, quoted from the frozen snapshot (
-          <a className="text-primary hover:underline" href={`${GITHUB}/docs/quotes/outlayer-agent-custody.md`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/docs/quotes/outlayer-agent-custody.md`}>
             docs/quotes/outlayer-agent-custody.md
           </a>
           ):
@@ -49,11 +49,13 @@ export default function ImpactPage() {
         <ul className="mt-3 max-w-2xl list-disc pl-5 text-foreground">
           <li>
             Concurrency: &quot;the cumulative caps may be exceeded by the in-flight batch&quot; (
-            <a className="text-primary hover:underline" href={`${GITHUB}/PRD.md#2-problem--why-now`}>
+            <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/PRD.md#2-problem--why-now`}>
               PRD.md §2
             </a>
             ,{" "}
             <a
+              target="_blank"
+              rel="noreferrer"
               className="text-primary hover:underline"
               href={`${GITHUB}/docs/quotes/outlayer-agent-custody.md`}
             >
@@ -63,11 +65,13 @@ export default function ImpactPage() {
           </li>
           <li>
             Freeze: &quot;freezing the wallet stops new orders but does not cancel resting ones&quot; (
-            <a className="text-primary hover:underline" href={`${GITHUB}/PRD.md#2-problem--why-now`}>
+            <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/PRD.md#2-problem--why-now`}>
               PRD.md §2
             </a>
             ,{" "}
             <a
+              target="_blank"
+              rel="noreferrer"
               className="text-primary hover:underline"
               href={`${GITHUB}/docs/quotes/outlayer-agent-custody.md`}
             >
@@ -78,11 +82,13 @@ export default function ImpactPage() {
           <li>
             Ambiguous status: &quot;do not auto-retry (the transfer may have fired, so a retry can
             double-spend)&quot; (
-            <a className="text-primary hover:underline" href={`${GITHUB}/PRD.md#2-problem--why-now`}>
+            <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/PRD.md#2-problem--why-now`}>
               PRD.md §2
             </a>
             ,{" "}
             <a
+              target="_blank"
+              rel="noreferrer"
               className="text-primary hover:underline"
               href={`${GITHUB}/docs/quotes/outlayer-agent-custody.md`}
             >
@@ -98,7 +104,7 @@ export default function ImpactPage() {
         <p className="mt-3 max-w-2xl text-foreground">
           Run the battery, then adopt the five invariants as a free design checklist for your own
           NEAR agent wallet (
-          <a className="text-primary hover:underline" href={`${GITHUB}/PRD.md#3-threat-model--invariants-constitution`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/PRD.md#3-threat-model--invariants-constitution`}>
             PRD.md §3
           </a>
           ):
@@ -116,7 +122,7 @@ export default function ImpactPage() {
           Every verdict hash is attested on NEAR testnet and explorer-verifiable (SC-3). The
           append-once tamper-evident ledger (same-hash re-attest idempotent, conflicting hash
           panics) is itself a reusable NEAR pattern for verifiable claims. See the contract (
-          <a className="text-primary hover:underline" href={`${GITHUB}/contracts/attest/src/lib.rs`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/contracts/attest/src/lib.rs`}>
             contracts/attest/src/lib.rs
           </a>
           ) or{" "}
@@ -131,13 +137,13 @@ export default function ImpactPage() {
         <h2 className="font-display text-3xl text-foreground md:text-5xl">Free and open</h2>
         <p className="mt-3 max-w-2xl text-foreground">
           MIT licensed (
-          <a className="text-primary hover:underline" href={`${GITHUB}/LICENSE`}>LICENSE</a>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/LICENSE`}>LICENSE</a>
           ), one command (<code className="text-foreground">pnpm arena:run</code>), secret-free base
           run (FR-9, SC-1). No public harness proves policy-engine failure with settlement on a real
           fork: &quot;none publicly executes a financial exploit against the agent-wallet policy
           engine itself (spend caps, freezes, settlement receipts, function-call-key scoping) on a
           real NEAR fork, with settlement&quot; (
-          <a className="text-primary hover:underline" href={`${GITHUB}/docs/NOVELTY-POSITIONING.md`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/docs/NOVELTY-POSITIONING.md`}>
             docs/NOVELTY-POSITIONING.md
           </a>
           ).

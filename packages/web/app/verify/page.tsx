@@ -52,7 +52,7 @@ export default function VerifyPage() {
         <p className="max-w-3xl leading-relaxed">
           Everything else in the receipt file ({EXCLUDED_FIELDS}) is excluded from the hash. Equal
           core in, equal hash out, on any machine (
-          <a className="text-primary hover:underline" href={ARCHITECTURE_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={ARCHITECTURE_URL}>
             docs/ARCHITECTURE.md, Receipt schema
           </a>
           ).
@@ -90,13 +90,13 @@ export default function VerifyPage() {
           <Chip value="get_attestation" /> on contract <Chip value="attest-ledger.testnet" /> with
           args <Chip value={'{"attack_id": "...", "target": "..."}'} /> at finality{" "}
           <Chip value={'"final"'} />. View calls need no account and no key,{" "}
-          <a className="text-primary hover:underline" href={ATTEST_LIB_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={ATTEST_LIB_URL}>
             getAttestation
           </a>{" "}
           in packages/web/lib/attest.ts reads the ledger exactly this way.
         </p>
         <p className="text-sm">
-          <a className="text-primary hover:underline" href={EXPLORER_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={EXPLORER_URL}>
             Browse the attestation ledger on the testnet explorer
           </a>
         </p>
@@ -108,7 +108,7 @@ export default function VerifyPage() {
           The shared ledger is read-only for everyone, and the on-chain <Chip value="attester" />{" "}
           field shows whose attestation you are trusting. Posting is append-once per (attack_id,
           target): re-attesting the same hash is an idempotent no-op, and a conflicting hash panics (
-          <a className="text-primary hover:underline" href={ATTEST_CONTRACT_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={ATTEST_CONTRACT_URL}>
             contracts/attest/src/lib.rs
           </a>
           ). That refusal is the tamper evidence.
@@ -116,7 +116,7 @@ export default function VerifyPage() {
         <p className="max-w-3xl leading-relaxed">
           Builders can attest to their own deployed copy by pointing{" "}
           <Chip value="ARENA_ATTEST_CONTRACT" /> at it (
-          <a className="text-primary hover:underline" href={CONFIG_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={CONFIG_URL}>
             packages/harness/src/config.ts
           </a>
           ).
@@ -127,7 +127,7 @@ export default function VerifyPage() {
         <h2 className="font-display text-3xl text-foreground md:text-5xl">The four states</h2>
         <p className="max-w-3xl leading-relaxed">
           Each receipt cell resolves to one of four states, mirroring the AttestationState union in{" "}
-          <a className="text-primary hover:underline" href={ATTEST_LIB_URL}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={ATTEST_LIB_URL}>
             packages/web/lib/attest.ts
           </a>
           :

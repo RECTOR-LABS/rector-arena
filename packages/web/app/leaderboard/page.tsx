@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getAttestation, getAttestationCount, type AttestationState } from "@/lib/attest";
 import { humanizeDelta, loadAttackRows, settledTotal, type AttackRow, type ReceiptCell } from "@/lib/receipts";
 
@@ -99,9 +97,14 @@ export default async function LeaderboardPage() {
       <p className="mt-2 max-w-4xl text-foreground">
         Damn Vulnerable Agent Wallets, an open arena that hunts agent-wallet policy engines on
         NEAR, and ships the wallet that survives.{" "}
-        <Link className="text-primary hover:underline" href="https://github.com/RECTOR-LABS/rector-arena#readme">
+        <a
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary hover:underline"
+          href="https://github.com/RECTOR-LABS/rector-arena#readme"
+        >
           README
-        </Link>
+        </a>
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
         attestation ledger:{" "}
@@ -145,9 +148,14 @@ export default async function LeaderboardPage() {
         rpc unreachable: the testnet RPC could not be queried. Integrity: each receipt&apos;s
         verdict_hash is recomputed from {"{"}attack_id, target, verdict, per_account_deltas{"}"} and
         compared against the hash stored in the file. Architecture:{" "}
-        <Link className="text-primary hover:underline" href="https://github.com/RECTOR-LABS/rector-arena/blob/main/docs/ARCHITECTURE.md">
+        <a
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary hover:underline"
+          href="https://github.com/RECTOR-LABS/rector-arena/blob/main/docs/ARCHITECTURE.md"
+        >
           docs/ARCHITECTURE.md
-        </Link>
+        </a>
       </p>
     </main>
   );

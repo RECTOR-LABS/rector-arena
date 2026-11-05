@@ -52,15 +52,27 @@ export default function SiteFooter() {
         {columns.map((col) => (
           <div key={col.title} className="flex flex-col gap-3">
             <span className="text-muted-foreground">{col.title}</span>
-            {col.links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
+            {col.links.map((l) =>
+              l.href.startsWith("http") ? (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {l.label}
+                </Link>
+              ),
+            )}
           </div>
         ))}
       </div>

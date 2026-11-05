@@ -41,7 +41,7 @@ export default function BatteryPage() {
         <p className="mt-3 max-w-2xl text-foreground">
           Build the harness, the target simulation, and both contracts (reference and attest wasm
           builds per the M1 and M3 records in{" "}
-          <a className="text-primary hover:underline" href={`${GITHUB}/docs/ROADMAP.md`}>
+          <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/docs/ROADMAP.md`}>
             docs/ROADMAP.md
           </a>
           ):
@@ -91,7 +91,7 @@ export default function BatteryPage() {
               <td className="py-3 align-top text-muted-foreground">
                 runs a single target. Unset, the full battery runs against both targets. An unknown
                 value exits 2 before any account creation (usageFail,{" "}
-                <a className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/run.ts`}>
+                <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/run.ts`}>
                   run.ts
                 </a>
                 ).
@@ -104,11 +104,11 @@ export default function BatteryPage() {
                 <code className="font-mono">ARENA_ATTEST_ACCOUNT_ID</code> and{" "}
                 <code className="font-mono">ARENA_ATTEST_PRIVATE_KEY</code>, a funded testnet
                 account of your own (
-                <a className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/attest.ts`}>
+                <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/attest.ts`}>
                   attest.ts
                 </a>
                 ), supplied as env vars, never committed. The base run stays secret-free (FR-9, SC-1 in{" "}
-                <a className="text-primary hover:underline" href={`${GITHUB}/PRD.md#7-success-criteria--demo-script`}>
+                <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/PRD.md#7-success-criteria--demo-script`}>
                   PRD.md §7
                 </a>
                 ).
@@ -118,7 +118,7 @@ export default function BatteryPage() {
               <td className="py-3 pr-4 align-top"><code className="font-mono text-sm text-foreground">ARENA_ATTEST_CONTRACT</code></td>
               <td className="py-3 align-top text-muted-foreground">
                 point it at your own deployed copy of the attest contract (
-                <a className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/config.ts`}>
+                <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/packages/harness/src/config.ts`}>
                   config.ts
                 </a>{" "}
                 override).
@@ -136,7 +136,7 @@ export default function BatteryPage() {
             <div className="font-display text-5xl tabular-nums text-foreground">528 ms</div>
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
               node startup against the 120 s budget, measured in the M0 spike record (
-              <a className="text-primary hover:underline" href={`${GITHUB}/docs/ROADMAP.md`}>
+              <a target="_blank" rel="noreferrer" className="text-primary hover:underline" href={`${GITHUB}/docs/ROADMAP.md`}>
                 docs/ROADMAP.md
               </a>
               ).
