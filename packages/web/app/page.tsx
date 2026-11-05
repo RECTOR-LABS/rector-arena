@@ -1,0 +1,68 @@
+import Link from "next/link";
+
+import VerdictSequencer, { type SequencerRow } from "@/app/components/verdict-sequencer";
+import { Button } from "@/components/ui/button";
+import { getAttestation } from "@/lib/attest";
+import { loadAttackRows, settledTotal, type ReceiptCell } from "@/lib/receipts";
+
+export const dynamic = "force-dynamic";
+
+function toPlainCell(cell: ReceiptCell | null): SequencerRow["gateway"] {
+  if (!cell) return null;
+  return {
+    settled: settledTotal(cell),
+    verdict: cell.verdict,
+    attestation: cell.attestation?.state ?? null,
+  };
+}
+
+export default async function LandingPage() {
+  const rows = await loadAttackRows();
+  await Promise.all(
+    rows.flatMap((row) =>
+      (["gateway", "reference"] as const).map(async (target) => {
+        const cell = row.cells[target];
+        if (!cell) return;
+        cell.attestation = await getAttestation(cell.attackId, cell.target, cell.verdictHash);
+      }),
+    ),
+  );
+
+  const plainRows: SequencerRow[] = rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    gateway: toPlainCell(row.cells.gateway),
+    reference: toPlainCell(row.cells.reference),
+  }));
+
+  return (
+    <main className="py-12">
+      <section className="pt-4">
+        <h1 className="font-display text-5xl text-foreground sm:text-6xl">
+          Damn Vulnerable Agent Wallets
+        </h1>
+        <p className="mt-4 max-w-2xl text-lg text-foreground">
+          An open arena that hunts agent-wallet policy engines on NEAR.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button render={<Link href="/battery" />} nativeButton={false}>
+            Run the battery
+          </Button>
+          <Button variant="outline" render={<Link href="/simulate" />} nativeButton={false}>
+            Watch it fall and hold
+          </Button>
+        </div>
+      </section>
+
+      <VerdictSequencer rows={plainRows} />
+
+      <p className="mt-8 text-sm text-muted-foreground">
+        {plainRows.length * 2} receipts, every verdict hash attested on attest-ledger.testnet,{" "}
+        <Link className="text-primary hover:underline" href="/verify">
+          recompute them yourself
+        </Link>
+        .
+      </p>
+    </main>
+  );
+}
