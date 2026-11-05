@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" role="img" aria-label="rector-arena — Damn Vulnerable Agent Wallets">
+  <!-- card -->
+  <rect x="0.5" y="0.5" width="959" height="319" rx="16" fill="#0A0E13" stroke="#1F2630"/>
+
+  <!-- left column -->
+  <g font-family="'SFMono-Regular',Menlo,Consolas,monospace">
+    <text x="56" y="80" font-size="13" font-weight="600" fill="#00EC97" letter-spacing="3">RECTOR-ARENA · NEAR HACKATHON</text>
+    <text x="54" y="138" font-size="44" font-weight="700" fill="#F5F7FA" letter-spacing="1">DAMN VULNERABLE</text>
+    <text x="54" y="192" font-size="44" font-weight="700" fill="#F5F7FA" letter-spacing="1">AGENT WALLETS</text>
+    <text x="56" y="230" font-size="15" fill="#8B98A5">Five deterministic attacks. Two policy engines. On-chain receipts.</text>
+  </g>
+
+  <!-- chip row -->
+  <g font-family="'SFMono-Regular',Menlo,Consolas,monospace" font-size="12" fill="#C7D0DA" text-anchor="middle">
+    <rect x="56"  y="260" width="62"  height="28" rx="14" fill="#11161D" stroke="#263041"/>
+    <text x="87"  y="278.5">A1–A5</text>
+    <rect x="128" y="260" width="92"  height="28" rx="14" fill="#11161D" stroke="#263041"/>
+    <text x="174" y="278.5">2 targets</text>
+    <rect x="230" y="260" width="106" height="28" rx="14" fill="#11161D" stroke="#263041"/>
+    <text x="283" y="278.5">10 receipts</text>
+    <rect x="346" y="260" width="142" height="28" rx="14" fill="#11161D" stroke="#263041"/>
+    <text x="417" y="278.5">testnet-attested</text>
+    <rect x="498" y="260" width="48"  height="28" rx="14" fill="#11161D" stroke="#263041"/>
+    <text x="522" y="278.5">MIT</text>
+  </g>
+
+  <!-- right motif: five bolts strike the wallet; the shield holds -->
+  <g font-family="'SFMono-Regular',Menlo,Consolas,monospace" font-size="11" font-weight="600" fill="#FF5C5C" text-anchor="middle">
+    <text x="772" y="46">A1</text>
+    <text x="802" y="46">A2</text>
+    <text x="832" y="46">A3</text>
+    <text x="862" y="46">A4</text>
+    <text x="892" y="46">A5</text>
+  </g>
+  <g stroke="#FF5C5C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="772,54 766,80 774,80 768,108"/>
+    <polyline points="802,60 796,86 804,86 798,104"/>
+    <polyline points="832,54 826,80 834,80 828,108"/>
+    <polyline points="862,60 856,86 864,86 858,104"/>
+    <polyline points="892,54 886,80 894,80 888,108"/>
+  </g>
+
+  <!-- wallet card glyph -->
+  <rect x="750" y="118" width="150" height="96" rx="12" fill="#11161D" stroke="#1F2630" stroke-width="1.5"/>
+  <line x1="750" y1="146" x2="900" y2="146" stroke="#1F2630" stroke-width="1.5"/>
+  <rect x="766" y="160" width="24" height="17" rx="3" fill="none" stroke="#263041" stroke-width="1.5"/>
+  <circle cx="872" cy="184" r="7" fill="none" stroke="#263041" stroke-width="1.5"/>
+
+  <!-- shield with check, in front of the wallet -->
+  <path d="M825 158 L856 169 V194 C856 213 843 226 825 233 C807 226 794 213 794 194 V169 Z" fill="#11161D" stroke="#00EC97" stroke-width="2" stroke-linejoin="round"/>
+  <polyline points="813,194 821,203 838,185" fill="none" stroke="#00EC97" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
