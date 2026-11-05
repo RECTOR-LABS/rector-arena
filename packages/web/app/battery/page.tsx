@@ -84,6 +84,7 @@ export default function BatteryPage() {
         <h2 className="font-display text-3xl text-foreground md:text-5xl">Variants</h2>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[560px] max-w-2xl border-collapse text-sm">
+            <caption className="sr-only">Environment variable variants</caption>
           <tbody>
             <tr className="border-t border-border">
               <td className="w-72 py-3 pr-4 align-top"><code className="font-mono text-sm text-foreground">ARENA_TARGET=gateway|reference</code></td>
