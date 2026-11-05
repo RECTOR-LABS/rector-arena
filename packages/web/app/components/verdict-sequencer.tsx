@@ -34,10 +34,10 @@ const GRID =
 
 function VerdictCell({ cell }: { cell: SequencerCell }) {
   if (!cell) {
-    return <div className="text-muted-foreground">no receipt</div>;
+    return <div role="cell" className="text-muted-foreground">no receipt</div>;
   }
   return (
-    <div>
+    <div role="cell">
       <div>
         <span className={`font-semibold ${VERDICT_CLASS[cell.verdict] ?? "text-foreground"}`}>
           {cell.verdict}
@@ -70,30 +70,33 @@ export default function VerdictSequencer({ rows }: { rows: SequencerRow[] }) {
             Replay
           </Button>
         </div>
-        <div className={`${GRID} mt-1 pb-2 text-xs text-muted-foreground`}>
-          <span>attack</span>
-          <span>gateway</span>
-          <span>reference</span>
-          <span>attestation</span>
-        </div>
-        <div key={replays}>
-          {rows.map((row, index) => (
-            <div
-              key={row.id}
-              className={`seq-row ${GRID} border-t border-border py-3`}
-              style={{ "--seq-i": index } as CSSProperties}
-            >
-              <div>
-                <span className="font-semibold text-foreground">{row.id}</span>{" "}
-                <span className="text-muted-foreground">{row.name}</span>
+        <div role="table" aria-label="attack verdicts" className="mt-1">
+          <div role="row" className={`${GRID} pb-2 text-xs text-muted-foreground`}>
+            <span role="columnheader">attack</span>
+            <span role="columnheader">gateway</span>
+            <span role="columnheader">reference</span>
+            <span role="columnheader">attestation</span>
+          </div>
+          <div role="rowgroup" key={replays}>
+            {rows.map((row, index) => (
+              <div
+                key={row.id}
+                role="row"
+                className={`seq-row ${GRID} border-t border-border py-3`}
+                style={{ "--seq-i": index } as CSSProperties}
+              >
+                <div role="cell">
+                  <span className="font-semibold text-foreground">{row.id}</span>{" "}
+                  <span className="text-muted-foreground">{row.name}</span>
+                </div>
+                <VerdictCell cell={row.gateway} />
+                <VerdictCell cell={row.reference} />
+                <div role="cell" className="pt-0.5">
+                  <AttestationCell cell={row.reference} />
+                </div>
               </div>
-              <VerdictCell cell={row.gateway} />
-              <VerdictCell cell={row.reference} />
-              <div className="pt-0.5">
-                <AttestationCell cell={row.reference} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>
