@@ -29,8 +29,11 @@ const ATTESTATION_BADGE: Record<string, { label: string; className: string }> = 
   "rpc-unreachable": { label: "rpc unreachable", className: "text-muted-foreground" },
 };
 
+// Below sm the four columns collapse to two: the attack and attestation
+// cells span the full width so the verdict cells keep readable halves at
+// 375px instead of wrapping into cramped stacks.
 const GRID =
-  "grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] items-start gap-x-4";
+  "grid grid-cols-2 items-start gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:gap-y-0";
 
 function VerdictCell({ cell }: { cell: SequencerCell }) {
   if (!cell) {
@@ -72,10 +75,14 @@ export default function VerdictSequencer({ rows }: { rows: SequencerRow[] }) {
         </div>
         <div role="table" aria-label="attack verdicts" className="mt-1">
           <div role="row" className={`${GRID} pb-2 text-xs text-muted-foreground`}>
-            <span role="columnheader">attack</span>
+            <span role="columnheader" className="col-span-2 sm:col-span-1">
+              attack
+            </span>
             <span role="columnheader">gateway</span>
             <span role="columnheader">reference</span>
-            <span role="columnheader">attestation</span>
+            <span role="columnheader" className="col-span-2 sm:col-span-1">
+              attestation
+            </span>
           </div>
           <div role="rowgroup" key={replays}>
             {rows.map((row, index) => (
@@ -85,13 +92,13 @@ export default function VerdictSequencer({ rows }: { rows: SequencerRow[] }) {
                 className={`seq-row ${GRID} border-t border-border py-3`}
                 style={{ "--seq-i": index } as CSSProperties}
               >
-                <div role="cell">
+                <div role="cell" className="col-span-2 sm:col-span-1">
                   <span className="font-semibold text-foreground">{row.id}</span>{" "}
                   <span className="text-muted-foreground">{row.name}</span>
                 </div>
                 <VerdictCell cell={row.gateway} />
                 <VerdictCell cell={row.reference} />
-                <div role="cell" className="pt-0.5">
+                <div role="cell" className="col-span-2 pt-0.5 sm:col-span-1">
                   <AttestationCell cell={row.reference} />
                 </div>
               </div>
