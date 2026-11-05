@@ -67,7 +67,7 @@ The hackathon context stays binding: the submission deadline is 2026-11-14T23:59
 | `/how-it-works` | Inline SVG flow diagram (mainnet fork through attested leaderboard, token vars only, aria-labelled), three paragraphs: two targets, the oracle (W-5), the fork (M0 envelope) |
 | `/leaderboard` | The former `app/page.tsx` moved from `/`, links absolutized (`/{repoPath}`, GitHub blob URLs), classes remapped to tokens |
 
-- Shared chrome: edge-aligned nav (wordmark in Pixelify face, eight route links, GitHub text link, one primary "Run the battery" button, mobile disclosure below md); footer with mast line, three link columns (Project, Evidence, Docs) and the MIT + guard + type-credit bottom line.
+- Shared chrome: edge-aligned nav (wordmark in Pixelify face, eight route links, GitHub text link, one primary "Run the battery" button, mobile disclosure below lg); footer with mast line, three link columns (Project, Evidence, Docs) and the MIT + guard + type-credit bottom line.
 - Data contract: `lib/receipts.ts` and `lib/attest.ts` untouched; pages compose them.
 - Copy module: `lib/attack-copy.ts` holds the per-attack copy (weakness, adversary, mechanic, oracle, fall/hold amounts, spec anchor), joined with live rows on `/attacks`.
 - Hallmark process: preflight cached at `.hallmark/preflight.json` (gitignored); hero reviewed in fresh context (verdict: ship); stamp, waivers (44c), answers (F18) and dismissals (58) recorded in `app/theme.css`; `.hallmark/` build cache stays out of git.
