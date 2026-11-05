@@ -93,32 +93,35 @@ export default async function LeaderboardPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-foreground">rector-arena: leaderboard</h1>
-      <p className="mt-2 max-w-4xl text-foreground">
-        Damn Vulnerable Agent Wallets, an open arena that hunts agent-wallet policy engines on
-        NEAR, and ships the wallet that survives.{" "}
-        <a
-          target="_blank"
-          rel="noreferrer"
-          className="text-primary hover:underline"
-          href="https://github.com/RECTOR-LABS/rector-arena#readme"
-        >
-          README
-        </a>
-      </p>
-      <p className="mt-2 text-sm text-muted-foreground">
-        attestation ledger:{" "}
-        {ledger.count === null ? (
-          <span className="text-muted-foreground">unreachable</span>
-        ) : (
-          <span className="text-foreground">
-            {ledger.count} attestation{ledger.count === 1 ? "" : "s"} @{" "}
-            <span className="font-mono">{ledger.contract}</span>
-          </span>
-        )}
-      </p>
+      <header>
+        <h1 className="text-2xl font-bold text-foreground">rector-arena: leaderboard</h1>
+        <p className="mt-2 max-w-4xl text-foreground">
+          Damn Vulnerable Agent Wallets, an open arena that hunts agent-wallet policy engines on
+          NEAR, and ships the wallet that survives.{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary hover:underline"
+            href="https://github.com/RECTOR-LABS/rector-arena#readme"
+          >
+            README
+          </a>
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          attestation ledger:{" "}
+          {ledger.count === null ? (
+            <span className="text-muted-foreground">unreachable</span>
+          ) : (
+            <span className="text-foreground">
+              {ledger.count} attestation{ledger.count === 1 ? "" : "s"} @{" "}
+              <span className="font-mono">{ledger.contract}</span>
+            </span>
+          )}
+        </p>
+      </header>
 
-      <table className="mt-6 w-full border-collapse text-sm">
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
         <caption className="sr-only">
           Attack battery results: gateway vs reference verdicts with attestation state
         </caption>
@@ -139,8 +142,9 @@ export default async function LeaderboardPage() {
           {rows.map((row) => (
             <AttackRowView key={row.id} row={row} />
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
 
       <p className="mt-6 max-w-4xl text-xs text-muted-foreground">
         Attestation states, attested: on-chain verdict_hash equals the receipt&apos;s; MISMATCH:
