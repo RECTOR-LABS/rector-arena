@@ -1,0 +1,129 @@
+/* Hallmark · shape: nine-route adoption site (landing, battery, simulate, attacks, impact, verify, building, how-it-works, leaderboard) · theme: nearhackathon paper-terminal (adapted, by request) · genre: modern-minimal · signature: verdict sequencer + cap-race sim · date: 2026-11-05 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V5 · weakest: E, six routes unwritten at critique time; floor rules pre-wired here to hold the line across them */
+/* Hallmark · hero: command-deck (custom: headline block upper centre, verdict ledger is the visual and fills the fold) */
+/* Hallmark · answered F18 · Replay is a labelled control at its natural size, not a media slot */
+/* Hallmark · waive 44c · hero: command-deck stamped above · the custom posture runs the headline short so the verdict ledger fills the fold */
+/* Hallmark · dismissed 58 · the flagged window slices ledger, closing line and footer mast; no designed screen carries all three */
+
+/* Token values adopted from nearhackathon.com's published stylesheet (verified 2026-11-05). */
+:root {
+  --background: #e9e1cd;
+  --foreground: #322e25;
+  --card: #eee7d6;
+  --card-foreground: #322e25;
+  --popover: #f4eddd;
+  --popover-foreground: #322e25;
+  --primary: #005fb0;
+  --primary-foreground: #fff7e9;
+  --secondary: #dcd2ba;
+  --secondary-foreground: #322e25;
+  --muted: #dcd2ba;
+  --muted-foreground: #655d4f;
+  --accent: #dcd2ba;
+  --accent-foreground: #322e25;
+  --destructive: #b53124;
+  --border: #b7ac94;
+  --input: #b7ac94;
+  --ring: #005fb0;
+  --radius: 0rem;
+  --hold: #166534;
+  --fall: #b53124;
+  --line: #bdb199;
+  --surface: #e1d7c0;
+  --brand-blue: #0091fd;
+  --brand-sky: #83dcff;
+  --font-sans: "IBM Plex Mono", monospace;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-hold: var(--hold);
+  --color-fall: var(--fall);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --font-display: "Pixelify Sans", monospace;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-600.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("/fonts/pixelify-sans-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Hallmark floor: no horizontal scroll, instant visible focus, reduced motion honored. */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Signature: verdict sequencer (staged row entry; opacity and transform only). */
+.seq-row {
+  animation: seq-in 500ms ease-out both;
+  animation-delay: calc(var(--seq-i) * 150ms);
+}
+
+@keyframes seq-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+html {
+  scrollbar-color: var(--muted-foreground) var(--background);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
