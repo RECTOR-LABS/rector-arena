@@ -80,8 +80,8 @@ function AttackRowView({ row }: { row: AttackRow }) {
 }
 
 export default async function LeaderboardPage() {
+  const ledgerPromise = getAttestationCount();
   const rows = await loadAttackRows();
-  const ledger = await getAttestationCount();
   await Promise.all(
     rows.flatMap((row) =>
       (["gateway", "reference"] as const).map(async (target) => {
@@ -91,6 +91,7 @@ export default async function LeaderboardPage() {
       }),
     ),
   );
+  const ledger = await ledgerPromise;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
