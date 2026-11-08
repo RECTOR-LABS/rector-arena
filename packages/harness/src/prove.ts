@@ -20,7 +20,8 @@
  * `--readme <path>` checks a README variant against the same repo artifacts.
  * Exit 0 only when all checks pass.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -148,17 +149,38 @@ function isArtifactLink(target: string): boolean {
   return ROOT_DOCS.includes(rel);
 }
 
+/**
+ * FR-10 receipt set: git-committed receipts by default. Fresh-run receipts are
+ * uncommitted work-in-progress that no README claim links, so including them
+ * fails every `pnpm arena:run` → `pnpm arena:prove` sequence inside one clone
+ * (README steps 2→4). ARENA_PROVE_ALL=1 widens the scan to every *.json on disk.
+ */
 function receiptFiles(): string[] {
-  const out: string[] = [];
-  const visit = (dir: string) => {
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      if (statSync(full).isDirectory()) visit(full);
-      else if (entry.endsWith('.json')) out.push(relative(ROOT, full));
-    }
-  };
-  visit(RECEIPTS_DIR);
-  return out.sort();
+  if (process.env.ARENA_PROVE_ALL === '1') {
+    const out: string[] = [];
+    const visit = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) visit(full);
+        else if (entry.endsWith('.json')) out.push(relative(ROOT, full));
+      }
+    };
+    visit(RECEIPTS_DIR);
+    return out.sort();
+  }
+  return committedReceipts().filter((rel) => existsSync(join(ROOT, rel))).sort();
+}
+
+/** Receipt files tracked by git (relative to the repo root); fails loudly outside a checkout. */
+function committedReceipts(): string[] {
+  try {
+    return execFileSync('git', ['ls-files', 'receipts'], { cwd: ROOT, encoding: 'utf8' })
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.endsWith('.json'));
+  } catch (err) {
+    return fail([`git ls-files failed — arena:prove proves the committed receipt set; run inside the repo checkout: ${String(err)}`]);
+  }
 }
 
 function fail(lines: string[]): never {
