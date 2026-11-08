@@ -39,7 +39,7 @@ flowchart LR
 
 ## Results
 
-Committed evidence: 10 receipts, one per (attack, target); every verdict hash below is attested on the live testnet ledger `attest-ledger.testnet` and recompute-verified ([docs/ROADMAP.md](docs/ROADMAP.md) `## M3 record`; verification procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow). A fresh full-battery run on 2026-11-05 reproduced all 10 verdict hashes — FR-11 determinism holds across fork heights ([docs/ROADMAP.md](docs/ROADMAP.md) `## M4 record`).
+Committed evidence: 10 receipts, one per (attack, target); every verdict hash below is attested on the live testnet ledger `attest-ledger.testnet` and recompute-verified ([docs/ROADMAP.md](docs/ROADMAP.md) `## M3 record`; verification procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow). A fresh full-battery run on 2026-11-05 reproduced all 10 verdict hashes — FR-11 determinism holds across fork heights ([docs/ROADMAP.md](docs/ROADMAP.md) `## M4 record`); repeat full-battery runs on 2026-11-08 and 2026-11-09 reproduced the same 10 verdict hashes byte-identically (same [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract, fresh clones).
 
 | Attack | Weakness class | `gateway-replica` | `reference` |
 |--------|----------------|-------------------|-------------|
@@ -224,7 +224,7 @@ Each step is a command and its observable result — hackathon screening runs ma
    ```
 
    ```
-   arena:prove: PASS — 60 claims, all artifact-linked; 10/10 receipts covered; novelty claim verbatim
+   arena:prove: PASS — 64 claims, all artifact-linked; 10/10 receipts covered; novelty claim verbatim
    ```
 
 5. Verify an attestation without this repo's tooling — recompute SHA-256 over a receipt's canonical core (`attack_id`, `target`, `verdict`, `per_account_deltas`, in that order) and compare it with a `get_attestation` view call against `attest-ledger.testnet` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow); the ledger on the explorer: [attest-ledger.testnet](https://explorer.testnet.near.org/accounts/attest-ledger.testnet).
@@ -246,11 +246,19 @@ Each step is a command and its observable result — hackathon screening runs ma
 
    Recomputed hash == receipt [verdict_hash](receipts/a1-cap-race/gateway-20261101T171313Z.json) == on-chain record.
 
+## Who uses this next
+
+Agent-wallet teams on NEAR run the battery against their own policy engine — the targets registry defines the fall/hold contract ([docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §Targets registry), and `ARENA_ATTACK` selects a single attack for a fast determinism check ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract). The open third-target path is bring-your-own-wallet: implement the target surface, register the target, and the oracle pairs score it against A1..A5 ([docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §Targets registry). Agent-framework authors use the invariants as the checklist their spend policies must survive ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) §Invariants (constitution)).
+
 ## Novelty claim
 
 > Existing public work probes payment protocols over HTTP, statically fixtures agent tooling (including injection→wallet-exfiltration against synthetic wallets), or red-teams agents in simulated ledgers behind closed arenas — none publicly executes a financial exploit against the agent-wallet policy engine itself (spend caps, freezes, settlement receipts, function-call-key scoping) on a real NEAR fork, with settlement.
 
 Audit trail: [docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) — §Claim plus eleven pinned prior-art neighbors, URLs re-verified 2026-10-31. Per FR-10 ([PRD.md](PRD.md) §5), every claim on this page links to its artifact.
+
+## Provenance & disclosures
+
+Libraries, templates, and AI code are disclosed here per Q-005 ([docs/HACKATHON-EVENT.md](docs/HACKATHON-EVENT.md), rule Q-005): the harness runs on near-workspaces and near-sandbox (`package.json`); contracts build on near-sdk-rs 4.1.1 with the vendored battery-FT wasm (`packages/harness/vendor/PROVENANCE.md`, per [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Package tree); the leaderboard is Next.js with shadcn base-nova (`packages/web/package.json`, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Package tree). The project is AI-built under human direction; the baseline window is recorded in [docs/HACKATHON-EVENT.md](docs/HACKATHON-EVENT.md) (submission checklist, baseline note, Q-001). The repo carries no key material: attestation credentials come from the environment (FR-9, SC-1 in [PRD.md](PRD.md) §7), and the W-6 spike reads its near-sandbox genesis fixture key from `W6_SANDBOX_GENESIS_KEY` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract).
 
 ## Documentation
 
