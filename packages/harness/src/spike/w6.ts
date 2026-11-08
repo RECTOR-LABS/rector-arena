@@ -108,9 +108,20 @@ async function main(): Promise<void> {
       throw new Error(`gas keys require protocol >= 85, sandbox reports ${protocol}`);
     }
 
-    // Wallet: the sandbox genesis account (full-access key, 10,000 NEAR).
+    // Wallet: the sandbox genesis account (full-access key, 10,000 NEAR). The fixture key is a
+    // public near-sandbox tooling constant and is read from the environment — the repo carries
+    // no key material (Q-005 key handling; FR-9 in PRD.md §7).
     const walletId = 'sandbox';
-    const ownerSigner = signerFromPrivateKey('ed25519:3tgdk2wPraJzT4nsTuf86UX41xgPNk3MHnq8epARMdBNs29AFEztAuaQ7iHddDfXG9F2RzV1XNQYgJyAyoW51UBB');
+
+    /** The near-sandbox genesis fixture key — public tooling constant, never committed. */
+    function requireGenesisKey(): string {
+      const key = process.env.W6_SANDBOX_GENESIS_KEY;
+      if (key === undefined || key === '') {
+        throw new Error('W6_SANDBOX_GENESIS_KEY is not set — pass the near-sandbox genesis fixture key (public tooling constant; see the near-sandbox genesis.json). The repo carries no key material.');
+      }
+      return key;
+    }
+    const ownerSigner = signerFromPrivateKey(requireGenesisKey());
 
     // (1) Sibling-lane setup: one gas key, two lanes.
     const gasSigner = signerFromPrivateKey(privateKeyFromRandom('ed25519'));
