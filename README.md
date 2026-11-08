@@ -3,6 +3,10 @@
 ![rector-arena — Damn Vulnerable Agent Wallets](assets/hero.svg)
 
 Damn Vulnerable Agent Wallets — an open arena that hunts agent-wallet policy engines on NEAR, and ships the wallet that survives. This positioning is fixed ([PRD.md](PRD.md) §9, risk 3); the novelty cell it claims is dup-checked against eleven named prior-art neighbors ([docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) §Claim). Not an end-user wallet: the hardened `reference` contract is a hardening reference, not a consumer product ([PRD.md](PRD.md) §1, non-goals).
+Protection scope is explicit: the reference contract defends the configured NEP-141 envelope under owner-controlled policy (`contracts/reference-wallet/src/lib.rs`, [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
+Owner full-access-key theft is not defended ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
+The envelope is single-token — native Ⓝ and other FTs sit outside it ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
+Deceived-owner approvals are trusted, not vetted ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
 
 ## The problem
 
@@ -213,7 +217,7 @@ Each step is a command and its observable result — hackathon screening runs ma
 
    ![rector-arena web leaderboard — 10 receipts, 10 on-chain attestations, all integrity ok](assets/web-leaderboard.png)
 
-4. Prove this page — every claim line artifact-linked, every receipt under `receipts/` linked, the novelty block verbatim against [docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) §Claim (FR-10, SC-4 in [PRD.md](PRD.md) §7):
+4. Prove this page — every claim line artifact-linked, every committed receipt under `receipts/` linked (fresh-run receipts are uncommitted work-in-progress and are skipped; set `ARENA_PROVE_ALL=1` to scan the full directory), the novelty block verbatim against [docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) §Claim (FR-10, SC-4 in [PRD.md](PRD.md) §7):
 
    ```
    pnpm arena:prove
