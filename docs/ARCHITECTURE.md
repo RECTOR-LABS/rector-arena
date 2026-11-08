@@ -76,7 +76,7 @@ The M0 spike (`docs/ROADMAP.md` M0) decides mainnet-RPC fork vs testnet fork and
 
 ## Runner contract
 
-`pnpm arena:run` executes the full battery one-command in a clean environment with no secrets (FR-9, SC-1 in `PRD.md`). `ARENA_TARGET` selects the target per `docs/ATTACK-BATTERY.md` §Targets registry. Attestation is off unless `ARENA_ATTEST=1` is set.
+`pnpm arena:run` executes the full battery one-command in a clean environment with no secrets (FR-9, SC-1 in `PRD.md`). `ARENA_TARGET` selects the target per `docs/ATTACK-BATTERY.md` §Targets registry. `ARENA_ATTACK` (comma-separated ids `A1`..`A5` or slugs) runs an attack subset on both targets for fast determinism checks; unset runs the full battery. Attestation is off unless `ARENA_ATTEST=1` is set. Transient sandbox-RPC drops retry once with an actionable line before surfacing.
 
 `pnpm arena:prove` executes the machine-proof check (FR-10, SC-4 in `PRD.md`): it parses `README.md` and fails on any claim without a link to a receipt under `receipts/` or a document under `docs/`. The receipt set is the git-committed receipts — fresh-run receipts are uncommitted work-in-progress and stay outside the proof; `ARENA_PROVE_ALL=1` widens the scan to every `*.json` under `receipts/`.
 
