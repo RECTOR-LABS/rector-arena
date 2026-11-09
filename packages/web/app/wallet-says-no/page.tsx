@@ -1,0 +1,187 @@
+import { getAttestation, type AttestationState } from "@/lib/attest";
+import { humanizeDelta, loadAttackRows, type ReceiptCell } from "@/lib/receipts";
+
+export const dynamic = "force-dynamic";
+
+const ATTACK_ID = "A5";
+
+/** First-person statement the wallet makes when it refuses an intent. */
+const WALLET_REFUSAL = "I did not send this.";
+
+function AttestationBadge({ attestation }: { attestation: AttestationState }) {
+  const map: Record<AttestationState["state"], { label: string; className: string }> = {
+    match: { label: "attested", className: "text-hold" },
+    mismatch: { label: "MISMATCH", className: "text-fall" },
+    unattested: { label: "unattested", className: "text-muted-foreground" },
+    "rpc-unreachable": { label: "rpc unreachable", className: "text-muted-foreground" },
+  };
+  const view = map[attestation.state];
+  return <span className={view.className}>{view.label}</span>;
+}
+
+function IntegrityBadge({ ok }: { ok: boolean }) {
+  return ok ? (
+    <span className="text-hold">ok</span>
+  ) : (
+    <span className="text-fall">MISMATCH</span>
+  );
+}
+
+/** Outflow the wallet stopped (or failed to stop), humanized from the deltas. */
+function outflow(cell: ReceiptCell): string {
+  let total = 0n;
+  for (const d of cell.perAccountDeltas) {
+    const value = BigInt(d.delta);
+    if (value < 0n) total += -value;
+  }
+  return humanizeDelta(total.toString());
+}
+
+function ReceiptCard({ cell, label }: { cell: ReceiptCell | null; label: string }) {
+  if (!cell) {
+    return (
+      <div className="rounded-md border border-border p-4">
+        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <p className="mt-1 text-sm text-muted-foreground">no receipt</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-md border border-border p-4">
+      <p className="text-sm font-semibold text-foreground">
+        {label}:{" "}
+        <span className={cell.verdict === "hold" ? "text-hold" : "text-fall"}>
+          {cell.verdict}
+        </span>
+        <span className="text-muted-foreground">, {outflow(cell)} settled</span>
+      </p>
+      <div className="mt-2">
+        <a className="break-all font-mono text-xs text-primary hover:underline" href={`/${cell.repoPath}`}>
+          {cell.repoPath}
+        </a>
+      </div>
+      <p className="mt-1 font-mono text-xs text-muted-foreground">
+        verdict_hash {cell.verdictHash}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        ran_at {cell.ranAt}, integrity <IntegrityBadge ok={cell.integrityOk} />,{" "}
+        {cell.attestation ? <AttestationBadge attestation={cell.attestation} /> : "…"}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {cell.perAccountDeltas.map((d) => (
+          <span key={`${d.account}-${d.token}`} className="block">
+            {d.account}: {humanizeDelta(d.delta)} {d.token}
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
+export default async function WalletSaysNoPage() {
+  const rows = await loadAttackRows();
+  const row = rows.find((r) => r.id === ATTACK_ID);
+  const gateway = row?.cells.gateway ?? null;
+  const reference = row?.cells.reference ?? null;
+  await Promise.all(
+    (["gateway", "reference"] as const).map(async (target) => {
+      const cell = target === "gateway" ? gateway : reference;
+      if (!cell) return;
+      cell.attestation = await getAttestation(cell.attackId, cell.target, cell.verdictHash);
+    }),
+  );
+
+  // Every quantity below is read from the committed receipts, never hardcoded.
+  const fall = gateway;
+  const hold = reference;
+  const attempted = fall
+    ? fall.perAccountDeltas.find((d) => d.delta.startsWith("-"))
+    : undefined;
+  const recipient = fall?.perAccountDeltas.find((d) => !d.delta.startsWith("-"));
+  const attemptedAmount = attempted ? humanizeDelta(attempted.delta.slice(1)) : "unknown";
+  const attacker = recipient?.account ?? "unknown";
+  const token = attempted?.token ?? recipient?.token ?? "battery-ft";
+
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-10">
+      <header>
+        <h1 className="text-2xl font-bold text-foreground">Wallet says no</h1>
+        <p className="mt-2 max-w-3xl text-foreground">
+          What you see when a poisoned message tries to spend your money and the hardened
+          reference wallet refuses. This is the moment attack {ATTACK_ID} was built to force.
+        </p>
+      </header>
+
+      <section aria-label="the attempted transfer" className="mt-8">
+        <h2 className="text-lg font-semibold text-foreground">1. The attempt</h2>
+        <p className="mt-2 max-w-3xl text-foreground">
+          A settlement-migration email arrived and its content tried to move{" "}
+          <span className="font-semibold">{attemptedAmount} {token}</span> — the wallet&apos;s full
+          balance — to <span className="font-mono text-foreground">{attacker}</span>. The agent
+          drafted the transfer; the email was not you.
+        </p>
+      </section>
+
+      <section aria-label="the block" className="mt-8">
+        <h2 className="text-lg font-semibold text-foreground">2. The block</h2>
+        <p className="mt-2 max-w-3xl text-foreground">
+          <span className="font-semibold">{WALLET_REFUSAL}</span> Nothing moved:{" "}
+          {hold ? `${outflow(hold)} settled` : "no receipt"}. The reason is a rule the wallet
+          enforces before any spend: money only leaves through a request you approved yourself.
+          No owner-approved request exists for this intent, so the transfer never starts. The
+          invariant is INV-5, no settlement originates outside the policy-approved request flow;
+          the check lives in{" "}
+          <code className="font-mono text-xs">spend_intent</code> in{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary hover:underline"
+            href="https://github.com/RECTOR-LABS/rector-arena/blob/main/contracts/reference-wallet/src/lib.rs"
+          >
+            contracts/reference-wallet/src/lib.rs
+          </a>
+          , listed under{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary hover:underline"
+            href="https://github.com/RECTOR-LABS/rector-arena/blob/main/docs/THREAT-MODEL.md"
+          >
+            docs/THREAT-MODEL.md §Invariants
+          </a>
+          .
+        </p>
+      </section>
+
+      <section aria-label="paths forward" className="mt-8">
+        <h2 className="text-lg font-semibold text-foreground">3. What you can do</h2>
+        <ul className="mt-2 max-w-3xl list-disc space-y-1 pl-5 text-foreground">
+          <li>
+            Approve it for real: create a request yourself, review the receiver and amount, then
+            approve it — <code className="font-mono text-xs">create_request</code> /{" "}
+            <code className="font-mono text-xs">approve_request</code> in lib.rs. Only then does
+            the intent become spendable.
+          </li>
+          <li>
+            Freeze the wallet: <code className="font-mono text-xs">freeze</code> in lib.rs stops
+            settlement until you unfreeze.
+          </li>
+        </ul>
+      </section>
+
+      <section aria-label="receipts" className="mt-8">
+        <h2 className="text-lg font-semibold text-foreground">4. The receipts</h2>
+        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+          The same attack, run against two wallets: the gateway replica falls, the reference
+          wallet holds. Both runs are committed and attested.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <div className="grid gap-4 md:grid-cols-2">
+            <ReceiptCard cell={fall} label="gateway (falls)" />
+            <ReceiptCard cell={hold} label="reference (holds)" />
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
