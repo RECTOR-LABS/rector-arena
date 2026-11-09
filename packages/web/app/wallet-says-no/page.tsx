@@ -78,11 +78,73 @@ function ReceiptCard({ cell, label }: { cell: ReceiptCell | null; label: string 
   );
 }
 
+/** One refusal line per attack, in the wallet's own voice. */
+const REFUSALS: Record<string, string> = {
+  A1: "I stopped at my limit.",
+  A2: "I froze before this could move.",
+  A3: "I paid this intent once.",
+  A4: "That key could not leave my envelope.",
+};
+
+/** Card anatomy mirrors the receipts footer: refusal line, then the receipt proof. */
+function RejectionCard({ cell, refusal }: { cell: ReceiptCell | null; refusal: string }) {
+  if (!cell) {
+    return (
+      <div className="rounded-md border border-border p-4">
+        <p className="text-sm font-semibold text-foreground">&ldquo;{refusal}&rdquo;</p>
+        <p className="mt-1 text-sm text-muted-foreground">no receipt</p>
+      </div>
+    );
+  }
+  const settled = outflow(cell);
+  const recipient = cell.perAccountDeltas.find((d) => !d.delta.startsWith("-"));
+  const token = recipient?.token ?? cell.perAccountDeltas[0]?.token ?? "battery-ft";
+  const attempts = cell.txHashes.length;
+  return (
+    <div className="rounded-md border border-border p-4">
+      <p className="text-sm font-semibold text-foreground">&ldquo;{refusal}&rdquo;</p>
+      <p className="mt-1 text-sm text-foreground">
+        {cell.attackId} —{" "}
+        {attempts > 1 ? `${attempts} attempts raced, ` : ""}
+        {cell.verdict === "hold" ? <span className="text-hold">{cell.verdict}</span> : <span className="text-fall">{cell.verdict}</span>}
+        , {settled} {token} settled.
+      </p>
+      <div className="mt-2">
+        <a className="break-all font-mono text-xs text-primary hover:underline" href={`/${cell.repoPath}`}>
+          {cell.repoPath}
+        </a>
+      </div>
+      <p className="mt-1 font-mono text-xs text-muted-foreground">
+        verdict_hash {cell.verdictHash}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        ran_at {cell.ranAt}, integrity <IntegrityBadge ok={cell.integrityOk} />,{" "}
+        {cell.attestation ? <AttestationBadge attestation={cell.attestation} /> : "…"}
+      </p>
+    </div>
+  );
+}
+
 export default async function WalletSaysNoPage() {
   const rows = await loadAttackRows();
   const row = rows.find((r) => r.id === ATTACK_ID);
   const gateway = row?.cells.gateway ?? null;
   const reference = row?.cells.reference ?? null;
+
+  // Per-attack rejection cards: the reference wallet's receipt for A1-A4.
+  const refusals = ["A1", "A2", "A3", "A4"]
+    .map((id) => ({ id, cell: rows.find((r) => r.id === id)?.cells.reference ?? null }))
+    .filter((entry): entry is { id: string; cell: ReceiptCell } => entry.cell !== null);
+  await Promise.all(
+    refusals.map(async (entry) => {
+      entry.cell.attestation = await getAttestation(
+        entry.cell.attackId,
+        entry.cell.target,
+        entry.cell.verdictHash,
+      );
+    }),
+  );
+
   await Promise.all(
     (["gateway", "reference"] as const).map(async (target) => {
       const cell = target === "gateway" ? gateway : reference;
@@ -169,8 +231,28 @@ export default async function WalletSaysNoPage() {
         </ul>
       </section>
 
+      <section aria-label="every attack refused" className="mt-8">
+        <h2 className="text-lg font-semibold text-foreground">4. Every attack, refused</h2>
+        <p className="mt-2 max-w-3xl text-foreground">
+          Attack {ATTACK_ID} is the flagship moment, but it is not the only one. Each exploit in
+          the battery ends with the reference wallet refusing; these are the receipts it left
+          behind.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <div className="grid gap-4 md:grid-cols-2">
+            {refusals.map((entry) => (
+              <RejectionCard
+                key={entry.id}
+                cell={entry.cell}
+                refusal={REFUSALS[entry.id] ?? "I did not send this."}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section aria-label="receipts" className="mt-8">
-        <h2 className="text-lg font-semibold text-foreground">4. The receipts</h2>
+        <h2 className="text-lg font-semibold text-foreground">5. The receipts</h2>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           The same attack, run against two wallets: the gateway replica falls, the reference
           wallet holds. Both runs are committed and attested.

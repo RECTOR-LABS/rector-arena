@@ -31,6 +31,8 @@ export interface Receipt {
   target: Target;
   verdict: string;
   perAccountDeltas: AccountDelta[];
+  /** On-chain tx hashes the run produced; length = attempt/tx count. */
+  txHashes: string[];
   ranAt: string;
   verdictHash: string;
 }
@@ -55,6 +57,7 @@ interface RawReceipt {
   target: unknown;
   verdict: unknown;
   per_account_deltas: unknown;
+  tx_hashes: unknown;
   ran_at: unknown;
   verdict_hash: unknown;
 }
@@ -85,6 +88,9 @@ function parseReceipt(raw: unknown, attackId: string, target: Target): Receipt {
   if (!Array.isArray(r.per_account_deltas) || !r.per_account_deltas.every(isAccountDelta)) {
     throw new Error("per_account_deltas missing or malformed");
   }
+  if (!Array.isArray(r.tx_hashes) || !r.tx_hashes.every((t) => typeof t === "string")) {
+    throw new Error("tx_hashes missing or malformed");
+  }
   if (typeof r.ran_at !== "string") throw new Error("ran_at missing");
   if (typeof r.verdict_hash !== "string") throw new Error("verdict_hash missing");
   return {
@@ -92,6 +98,7 @@ function parseReceipt(raw: unknown, attackId: string, target: Target): Receipt {
     target,
     verdict: r.verdict,
     perAccountDeltas: r.per_account_deltas,
+    txHashes: r.tx_hashes,
     ranAt: r.ran_at,
     verdictHash: r.verdict_hash,
   };
