@@ -55,6 +55,9 @@ export default async function LandingPage() {
           <Button variant="outline" render={<Link href="/simulate" />} nativeButton={false}>
             Watch it fall and hold
           </Button>
+          <Button variant="outline" render={<Link href="/wallet-says-no" />} nativeButton={false}>
+            See the wallet say no
+          </Button>
         </div>
       </section>
 
