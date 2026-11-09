@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { getAttestation, type AttestationState } from "@/lib/attest";
 import { humanizeDelta, loadAttackRows, settledTotal, type ReceiptCell } from "@/lib/receipts";
 
@@ -273,46 +274,103 @@ export default async function WalletSaysNoPage() {
           </a>
           .
         </p>
-        <ol className="mt-4 max-w-3xl list-decimal space-y-4 pl-5 text-foreground">
+
+        {/* The approval moment, rendered: request card, decision row, settle strip.
+            Illustrative chrome around committed evidence; not a live wallet. */}
+        <div className="mt-6 max-w-3xl rounded-md border border-border bg-background p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground">
+              Settlement request — awaiting owner approval
+            </p>
+            <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+              awaiting owner approval
+            </span>
+          </div>
+          <dl className="mt-3 space-y-1 text-sm">
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">intent</dt>
+              <dd className="font-mono text-foreground">a3-intent-I</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">receiver</dt>
+              <dd className="font-mono text-foreground">savings.test.near</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">amount</dt>
+              <dd className="font-semibold text-primary">30 battery-ft</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Illustrative values — drafted by the agent via{" "}
+            <code className="font-mono text-xs">create_request</code>, not yet spendable until
+            you sign. No live wallet is attached here.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled aria-disabled="true">
+              Approve
+            </Button>
+            <Button size="sm" variant="outline" disabled aria-disabled="true">
+              Reject
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              flow walkthrough — no live wallet attached
+            </span>
+          </div>
+        </div>
+
+        {/* The settle strip: what Approve produces — the committed A3 reference receipt. */}
+        {a3 && (
+          <div className="mt-3 max-w-3xl rounded-md border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-foreground">
+              After Approve — settled exactly once
+            </p>
+            <p className="mt-1 text-sm text-foreground">
+              Exactly <span className="font-semibold text-primary">{settledTotal(a3)} battery-ft</span>{" "}
+              moved once, verdict <span className="text-hold">{a3.verdict}</span>.
+            </p>
+            <div className="mt-2">
+              <a
+                target="_blank"
+                rel="noreferrer"
+                className="break-all font-mono text-xs text-primary hover:underline"
+                href={`/${a3.repoPath}`}
+              >
+                {a3.repoPath}
+              </a>
+            </div>
+            <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+              verdict_hash {a3.verdictHash}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              ran_at {a3.ranAt},{" "}
+              {a3.attestation ? <AttestationBadge attestation={a3.attestation} /> : "…"}
+            </p>
+          </div>
+        )}
+
+        <p className="mt-6 max-w-3xl text-sm text-muted-foreground">
+          The three contract calls behind the mock, one caption per screen region:
+        </p>
+        <ol className="mt-2 max-w-3xl list-decimal space-y-4 pl-5 text-foreground">
           <li>
-            <span className="font-semibold">The agent registers the intent.</span>{" "}
+            <span className="font-semibold">The request card (above).</span>{" "}
             <code className="font-mono text-xs">create_request</code> (lib.rs) is agent-only: the
-            agent — even one driven by poisoned content — can record a receiver and an amount,
-            for example{" "}
-            <span className="font-mono text-xs">receiver savings.test.near, amount 10</span>{" "}
-            (illustrative values, not a committed receipt). Proposing carries no authorization:
-            at this point the intent exists but cannot spend anything.
+            agent — even one driven by poisoned content — can register the receiver and amount
+            you see on the card (illustrative values, not a committed receipt). Proposing carries
+            no authorization: the intent exists but cannot spend anything, and the funds stay in
+            the wallet.
           </li>
           <li>
-            <span className="font-semibold">The owner approves.</span>{" "}
+            <span className="font-semibold">The decision row.</span>{" "}
             <code className="font-mono text-xs">approve_request</code> (lib.rs) is owner-only:
             that signature is the provenance the attack {ATTACK_ID} gate demands. Content in a
             message can draft a transfer; it can never produce this signature.
           </li>
           <li>
-            <span className="font-semibold">The intent settles exactly once.</span>{" "}
+            <span className="font-semibold">The settle strip.</span>{" "}
             <code className="font-mono text-xs">spend_intent</code> consumes the approved intent
-            receipt, so a replay finds nothing left to settle. The committed A3 receipt is this
-            happy path in evidence:{" "}
-            <a
-              target="_blank"
-              rel="noreferrer"
-              className="break-all font-mono text-xs text-primary hover:underline"
-              href={`/${a3?.repoPath ?? "receipts/a3-needs-review-double-spend"}`}
-            >
-              {a3?.repoPath ?? "receipts/a3-needs-review-double-spend"}
-            </a>{" "}
-            — exactly {a3 ? `${settledTotal(a3)} moved once` : "the amount moved once"},{" "}
-            {a3 ? (
-              <>
-                verdict <span className="text-hold">{a3.verdict}</span>, verdict_hash{" "}
-                <span className="break-all">{a3.verdictHash}</span>,{" "}
-                {a3.attestation ? <AttestationBadge attestation={a3.attestation} /> : "…"}
-              </>
-            ) : (
-              "verdict hold"
-            )}
-            .
+            receipt, so a replay finds nothing left to settle. The strip is the committed A3
+            receipt rendered as Approve&apos;s result — the happy path in evidence.
           </li>
         </ol>
         <p className="mt-4 max-w-3xl text-foreground">
