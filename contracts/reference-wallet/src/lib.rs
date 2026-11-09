@@ -281,7 +281,7 @@ impl ReferenceWallet {
     pub fn on_ft_transfer_result(
         &mut self,
         amount: U128,
-        receiver_id: AccountId,
+        _receiver_id: AccountId,
         intent_id: Option<String>,
     ) -> bool {
         match env::promise_result(0) {
