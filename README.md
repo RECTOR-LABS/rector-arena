@@ -7,6 +7,7 @@ Protection scope is explicit: the reference contract defends the configured NEP-
 Owner full-access-key theft is not defended ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
 The envelope is single-token — native Ⓝ and other FTs sit outside it ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
 Deceived-owner approvals are trusted, not vetted ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md#non-defenses-protection-scope)).
+In plain terms: when a spend arrives, the reference wallet re-checks the policy inside the blockchain contract itself, in the same atomic transaction as the transfer — so a stolen agent key, a burst of simultaneous requests, a retried payment, or a poisoned email cannot move a single token the owner's policy did not approve ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) §Invariants (constitution)).
 
 ## The problem
 
@@ -224,7 +225,7 @@ Each step is a command and its observable result — hackathon screening runs ma
    ```
 
    ```
-   arena:prove: PASS — 64 claims, all artifact-linked; 10/10 receipts covered; novelty claim verbatim
+   arena:prove: PASS — all claims artifact-linked; 10/10 receipts covered; novelty claim verbatim
    ```
 
 5. Verify an attestation without this repo's tooling — recompute SHA-256 over a receipt's canonical core (`attack_id`, `target`, `verdict`, `per_account_deltas`, in that order) and compare it with a `get_attestation` view call against `attest-ledger.testnet` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow); the ledger on the explorer: [attest-ledger.testnet](https://explorer.testnet.near.org/accounts/attest-ledger.testnet).
@@ -248,7 +249,7 @@ Each step is a command and its observable result — hackathon screening runs ma
 
 ## Who uses this next
 
-Agent-wallet teams on NEAR run the battery against their own policy engine — the targets registry defines the fall/hold contract ([docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §Targets registry), and `ARENA_ATTACK` selects a single attack for a fast determinism check ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract). The open third-target path is bring-your-own-wallet: implement the target surface, register the target, and the oracle pairs score it against A1..A5 ([docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §Targets registry). Agent-framework authors use the invariants as the checklist their spend policies must survive ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) §Invariants (constitution)).
+Agent-wallet teams on NEAR run the battery against their own policy engine — the targets registry defines the fall/hold contract ([docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §Targets registry), and `ARENA_ATTACK` selects a single attack for a fast determinism check ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract). The open third-target path is bring-your-own-wallet: implement the target surface, register the target, and the oracle pairs score it against A1..A5 ([docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §Targets registry). Agent-framework authors use the invariants as the checklist their spend policies must survive ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) §Invariants (constitution)). Bring-your-own-wallet teams conform against the normative spec — the oracle-pair contract, the receipt canonical core, and the six-step checklist ([docs/specs/CONFORMANCE.md](docs/specs/CONFORMANCE.md)) — and verify their runs against the committed determinism manifest — one authoritative run plus four reproductions, three of them fresh-clone runs on 2026-11-05, 2026-11-08, and 2026-11-09, all 10 verdict hashes ([docs/DETERMINISM.md](docs/DETERMINISM.md)).
 
 ## Novelty claim
 
@@ -269,6 +270,8 @@ Libraries, templates, and AI code are disclosed here per Q-005 ([docs/HACKATHON-
 | [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) | assets, adversaries, trust boundaries, invariants |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | package tree, runtime flow, receipt JSON schema, attestation flow, runner contract |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | M0..M5 milestones with acceptance gates and the M0..M4 execution records |
+| [docs/specs/CONFORMANCE.md](docs/specs/CONFORMANCE.md) | normative bring-your-own-wallet conformance spec: oracle-pair contract, INV-1..INV-5 as measured quantities, receipt canonical core, six-step checklist, A1 worked example |
+| [docs/DETERMINISM.md](docs/DETERMINISM.md) | determinism manifest: the full-battery verification runs and the committed FR-11 verdict-hash table with the reproduction procedure |
 | [docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) | prior-art neighbors table + the novelty claim, dup-checked |
 | [docs/HACKATHON-EVENT.md](docs/HACKATHON-EVENT.md) | NEAR HACKATHON rules (verbatim copy) + submission checklist + payload contract |
 | [docs/quotes/outlayer-agent-custody.md](docs/quotes/outlayer-agent-custody.md) | frozen snapshot of the partner-doc anchors quoted in [PRD.md](PRD.md) §2 |
