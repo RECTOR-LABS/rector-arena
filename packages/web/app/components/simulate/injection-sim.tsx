@@ -13,12 +13,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceiptEvidence, usePrefersReducedMotion } from "./cap-race-sim";
 import { TimelineSteps, useScriptedSteps } from "./freeze-sim";
 
-const INJECTION_STEPS = [
+export const INJECTION_STEPS = [
   "poisoned email arrives",
   "agent drafts transfer of the full balance 200 to attacker",
   "policy check",
   "outcome",
 ] as const;
+
+// Shared A5 vocabulary: app/demo replays this story against the same verdict
+// copy, so the strings live in exactly one place.
+export const A5_VERDICTS = {
+  gateway: "victim drained of 200",
+  reference: "0 settled, provenance blocks the drain",
+} as const;
 
 type InjectionTarget = "gateway" | "reference";
 
@@ -41,7 +48,7 @@ function InjectionTimeline({ target, reduced }: { target: InjectionTarget; reduc
         )}
         {finished && (
           <p className={`mt-3 text-sm ${gateway ? "text-fall" : "text-hold"}`}>
-            {gateway ? "victim drained of 200" : "0 settled, provenance blocks the drain"}
+            {gateway ? A5_VERDICTS.gateway : A5_VERDICTS.reference}
           </p>
         )}
       </div>

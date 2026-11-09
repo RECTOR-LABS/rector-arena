@@ -80,4 +80,4 @@ The M0 spike (`docs/ROADMAP.md` M0) decides mainnet-RPC fork vs testnet fork and
 
 `pnpm arena:prove` executes the machine-proof check (FR-10, SC-4 in `PRD.md`): it parses `README.md` and fails on any claim without a link to a receipt under `receipts/` or a document under `docs/`. The receipt set is the git-committed receipts — fresh-run receipts are uncommitted work-in-progress and stay outside the proof; `ARENA_PROVE_ALL=1` widens the scan to every `*.json` under `receipts/`.
 
-`pnpm arena:web` serves the `packages/web` leaderboard (§Package tree) over the committed receipts and the live `get_attestation` view on the attest contract.
+`pnpm arena:web` serves the `packages/web` leaderboard (§Package tree) over the committed receipts and the live `get_attestation` view on the attest contract. `/demo` (packages/web/app/demo/page.tsx) replays the A5 story end-to-end with one Play button on the same committed receipts and live attestation view.

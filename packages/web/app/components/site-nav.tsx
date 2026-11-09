@@ -7,6 +7,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const links = [
+  { href: "/demo", label: "Demo" },
   { href: "/battery", label: "Run" },
   { href: "/simulate", label: "Simulate" },
   { href: "/attacks", label: "Attacks" },
@@ -32,7 +33,7 @@ export default function SiteNav() {
         rector-arena
       </Link>
 
-      <div className="hidden lg:flex items-center gap-4 ml-auto text-sm">
+      <div className="hidden xl:flex items-center gap-4 ml-auto text-sm">
         {links.map((l) => (
           <Link key={l.href} href={l.href} className={linkClass(l.href, pathname)}>
             {l.label}
@@ -49,7 +50,7 @@ export default function SiteNav() {
         <Button render={<Link href="/battery" />} nativeButton={false}>Run the battery</Button>
       </div>
 
-      <div className="lg:hidden ml-auto">
+      <div className="xl:hidden ml-auto">
         <MobileMenu pathname={pathname} />
       </div>
     </nav>
