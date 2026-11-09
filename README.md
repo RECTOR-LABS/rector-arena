@@ -228,7 +228,7 @@ Each step is a command and its observable result — hackathon screening runs ma
    arena:prove: PASS — all claims artifact-linked; 10/10 receipts covered; novelty claim verbatim
    ```
 
-5. Verify an attestation without this repo's tooling — recompute SHA-256 over a receipt's canonical core (`attack_id`, `target`, `verdict`, `per_account_deltas`, in that order) and compare it with a `get_attestation` view call against `attest-ledger.testnet` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow); the ledger on the explorer: [attest-ledger.testnet](https://explorer.testnet.near.org/accounts/attest-ledger.testnet).
+5. Verify an attestation without this repo's tooling — recompute SHA-256 over a receipt's canonical core (`attack_id`, `target`, `verdict`, `per_account_deltas`, in that order) and compare it with a `get_attestation` view call against `attest-ledger.testnet` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow). Build `args_base64` by base64-encoding the query arguments — `printf '%s' '{"attack_id":"A1","target":"gateway"}' | base64` yields the value in the curl below; the ledger on the explorer: [attest-ledger.testnet](https://explorer.testnet.near.org/accounts/attest-ledger.testnet).
 
    ```
    printf '%s' "$(jq -c '{attack_id,target,verdict,per_account_deltas}' receipts/a1-cap-race/gateway-20261101T171313Z.json)" | shasum -a 256

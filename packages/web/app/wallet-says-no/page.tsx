@@ -1,5 +1,5 @@
 import { getAttestation, type AttestationState } from "@/lib/attest";
-import { humanizeDelta, loadAttackRows, type ReceiptCell } from "@/lib/receipts";
+import { humanizeDelta, loadAttackRows, settledTotal, type ReceiptCell } from "@/lib/receipts";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +60,7 @@ function ReceiptCard({ cell, label }: { cell: ReceiptCell | null; label: string 
           {cell.repoPath}
         </a>
       </div>
-      <p className="mt-1 font-mono text-xs text-muted-foreground">
+      <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
         verdict_hash {cell.verdictHash}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -114,7 +114,7 @@ function RejectionCard({ cell, refusal }: { cell: ReceiptCell | null; refusal: s
           {cell.repoPath}
         </a>
       </div>
-      <p className="mt-1 font-mono text-xs text-muted-foreground">
+      <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
         verdict_hash {cell.verdictHash}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -163,6 +163,8 @@ export default async function WalletSaysNoPage() {
   const attemptedAmount = attempted ? humanizeDelta(attempted.delta.slice(1)) : "unknown";
   const attacker = recipient?.account ?? "unknown";
   const token = attempted?.token ?? recipient?.token ?? "battery-ft";
+  // A3 reference receipt: the happy path for the approval walkthrough below.
+  const a3 = rows.find((r) => r.id === "A3")?.cells.reference ?? null;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
@@ -219,10 +221,10 @@ export default async function WalletSaysNoPage() {
         <h2 className="text-lg font-semibold text-foreground">3. What you can do</h2>
         <ul className="mt-2 max-w-3xl list-disc space-y-1 pl-5 text-foreground">
           <li>
-            Approve it for real: create a request yourself, review the receiver and amount, then
-            approve it — <code className="font-mono text-xs">create_request</code> /{" "}
-            <code className="font-mono text-xs">approve_request</code> in lib.rs. Only then does
-            the intent become spendable.
+            Have the agent draft it, then approve it yourself: the agent proposes via{" "}
+            <code className="font-mono text-xs">create_request</code>, you review the receiver
+            and amount and sign <code className="font-mono text-xs">approve_request</code> in
+            lib.rs. Only then does the intent become spendable.
           </li>
           <li>
             Freeze the wallet: <code className="font-mono text-xs">freeze</code> in lib.rs stops
@@ -251,8 +253,76 @@ export default async function WalletSaysNoPage() {
         </div>
       </section>
 
+      <section aria-label="the approval walkthrough" className="mt-8">
+        <h2 className="text-balance text-lg font-semibold text-foreground">
+          5. What an approved spend looks like — the happy path, walked end to end
+        </h2>
+        <p className="mt-2 max-w-3xl text-foreground">
+          This is a walkthrough of the approval flow, not a wallet product: the reference wallet
+          is an audit artifact, not an end-user wallet. In plain terms, while an intent waits in
+          review the funds stay in the wallet — nothing moves until the owner signs the approval,
+          and if the owner says no, the intent expires inert. Three contract calls make up the
+          whole happy path in{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary hover:underline"
+            href="https://github.com/RECTOR-LABS/rector-arena/blob/main/contracts/reference-wallet/src/lib.rs"
+          >
+            contracts/reference-wallet/src/lib.rs
+          </a>
+          .
+        </p>
+        <ol className="mt-4 max-w-3xl list-decimal space-y-4 pl-5 text-foreground">
+          <li>
+            <span className="font-semibold">The agent registers the intent.</span>{" "}
+            <code className="font-mono text-xs">create_request</code> (lib.rs) is agent-only: the
+            agent — even one driven by poisoned content — can record a receiver and an amount,
+            for example{" "}
+            <span className="font-mono text-xs">receiver savings.test.near, amount 10</span>{" "}
+            (illustrative values, not a committed receipt). Proposing carries no authorization:
+            at this point the intent exists but cannot spend anything.
+          </li>
+          <li>
+            <span className="font-semibold">The owner approves.</span>{" "}
+            <code className="font-mono text-xs">approve_request</code> (lib.rs) is owner-only:
+            that signature is the provenance the attack {ATTACK_ID} gate demands. Content in a
+            message can draft a transfer; it can never produce this signature.
+          </li>
+          <li>
+            <span className="font-semibold">The intent settles exactly once.</span>{" "}
+            <code className="font-mono text-xs">spend_intent</code> consumes the approved intent
+            receipt, so a replay finds nothing left to settle. The committed A3 receipt is this
+            happy path in evidence:{" "}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              className="break-all font-mono text-xs text-primary hover:underline"
+              href={`/${a3?.repoPath ?? "receipts/a3-needs-review-double-spend"}`}
+            >
+              {a3?.repoPath ?? "receipts/a3-needs-review-double-spend"}
+            </a>{" "}
+            — exactly {a3 ? `${settledTotal(a3)} moved once` : "the amount moved once"},{" "}
+            {a3 ? (
+              <>
+                verdict <span className="text-hold">{a3.verdict}</span>, verdict_hash{" "}
+                <span className="break-all">{a3.verdictHash}</span>,{" "}
+                {a3.attestation ? <AttestationBadge attestation={a3.attestation} /> : "…"}
+              </>
+            ) : (
+              "verdict hold"
+            )}
+            .
+          </li>
+        </ol>
+        <p className="mt-4 max-w-3xl text-foreground">
+          The rejection you saw above is this same flow with step 2 missing: content alone never
+          substitutes for the owner&apos;s approval (INV-5).
+        </p>
+      </section>
+
       <section aria-label="receipts" className="mt-8">
-        <h2 className="text-lg font-semibold text-foreground">5. The receipts</h2>
+        <h2 className="text-lg font-semibold text-foreground">6. The receipts</h2>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           The same attack, run against two wallets: the gateway replica falls, the reference
           wallet holds. Both runs are committed and attested.
