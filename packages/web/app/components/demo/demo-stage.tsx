@@ -75,18 +75,13 @@ export default function DemoStage({
 }: DemoStageProps) {
   const [phase, setPhase] = useState(0);
   const [runId, setRunId] = useState(0);
-  const [pageVisible, setPageVisible] = useState(true);
   const reduced = usePrefersReducedMotion();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // visibilitychange gating, same contract as useScriptedSteps: the clock
-  // stops while the tab is hidden and resumes when it is visible again.
-  useEffect(() => {
-    const apply = () => setPageVisible(document.visibilityState === "visible");
-    apply();
-    document.addEventListener("visibilitychange", apply);
-    return () => document.removeEventListener("visibilitychange", apply);
-  }, []);
+  // No visibilitychange gating: this stage is a self-playing demo — a
+  // presenter window on a secondary display is occluded (macOS reports it
+  // hidden) while another window holds focus, and the clock must keep
+  // running there. Timers are cleaned up on unmount and restart on replay.
 
   useEffect(() => {
     if (reduced) {
@@ -95,7 +90,7 @@ export default function DemoStage({
       setPhase((value) => (value === 0 ? value : FINISHED));
       return;
     }
-    if (!pageVisible || phase === 0 || phase >= FINISHED) return;
+    if (phase === 0 || phase >= FINISHED) return;
     timerRef.current = setTimeout(
       () => {
         timerRef.current = null;
@@ -109,7 +104,7 @@ export default function DemoStage({
         timerRef.current = null;
       }
     };
-  }, [pageVisible, phase, reduced]);
+  }, [phase, reduced]);
 
   const play = useCallback(() => {
     setRunId((n) => n + 1);
