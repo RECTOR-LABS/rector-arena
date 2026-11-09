@@ -20,7 +20,7 @@ Target selection: the runner reads env `ARENA_TARGET`. A set value `gateway` sel
 - Accounts provisioned per run: `owner` (sets policy), `agent` (holds the function-call key), `wallet` (the target wallet account), `attacker` (adversary-controlled), `recipient` (policy-allowlisted), `victim` (A5 only).
 - Amounts: A1 uses velocity cap 100 with 8 concurrent spends of 20 each; A2 resting commitment 25; A3 intent once-amount 30; A4 per-intent max 10 with receiver allowlist `{recipient}`; A5 drains the victim balance in full.
 - Certain NEAR APIs used by name: `add_function_call_key`, `ft_balance_of` (NEP-141 view), `ft_transfer` (NEP-141), batch transactions. Bootstrap call shapes for near-workspaces-js are `unverified — confirm at implementation` (resolver: M0 spike, `docs/ROADMAP.md`).
-- Every attack completion writes a receipt JSON per `docs/ARCHITECTURE.md` §Receipt schema to `receipts/<attack_id>/<target>-<run_id>.json` (FR-7 in `PRD.md`).
+- Every attack completion writes a receipt JSON per `docs/ARCHITECTURE.md` §Receipt schema to `receipts/<attack-slug>/<target>-<run_id>.json` (FR-7 in `PRD.md`). Directory names use the lowercase attack slug (`a1-cap-race`, …); the registry ID (`A1`..`A5`) lives in the receipt JSON — naming convention specified in `docs/specs/CONFORMANCE.md` §3.
 
 ## Verdict semantics (all attacks)
 
