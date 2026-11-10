@@ -1,17 +1,19 @@
 # arena-check — CI adoption of the rector-arena battery.
 #
 # What it runs on every push to main and every PR:
-#   1. `pnpm -r build`   — TS harness + both wasm contracts (rustc 1.85 per
-#      packages/harness/vendor/PROVENANCE.md; newer rustc wasm fails the sandbox
-#      prepare step).
+#   1. `pnpm -r build`   — TS harness + web (tsc only; no contract compile).
+#      The battery loads the COMMITTED wasm artifacts (vendor/ft.wasm,
+#      contracts/reference-wallet/wasm) — CI never rebuilds them. The rustc
+#      1.85 law applies to whoever rebuilds those artifacts and lives in
+#      packages/harness/vendor/PROVENANCE.md.
 #   2. `ARENA_ATTACK=A1 pnpm arena:run` — the A1 cap-race smoke on both targets
-#      (~75 s after build; full sandbox boot included).
+#      (~3 min with full sandbox boots included).
 #   3. `pnpm arena:prove` — recomputes committed receipts and verifies the
 #      attest-ledger.testnet view (network only, no secrets).
 #
-# Expected duration: ~10–15 min (contract build dominates; the A1 smoke is
-# ~75 s and the full battery ~7 min stays LOCAL by design — `ARENA_TARGET`
-# unset is never run here; CI gates on the smoke, not the full battery).
+# Expected duration: ~5 min (the full ~7 min battery stays LOCAL by design —
+# `ARENA_TARGET` unset is never run here; CI gates on the smoke, not the full
+# battery).
 name: arena-check
 
 on:
@@ -34,26 +36,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      # Pin rustc exactly 1.85.0 (wasm from rustc >= 1.86 fails near-sandbox
-      # 0.1.5 prepare, PROVENANCE.md compatibility law) while keeping the
-      # toolchain NAME "1.85" so the contracts' `cargo +1.85` scripts resolve.
-      # The rustflags live in each contract's .cargo/config.toml — RUSTFLAGS
-      # env is sanitized out of pnpm scripts.
-      - name: Install rustc 1.85.0 (wasm32)
-        run: |
-          rustup toolchain install 1.85.0 --profile minimal --target wasm32-unknown-unknown
-          rustup toolchain link 1.85 "$HOME/.rustup/toolchains/1.85.0-x86_64-unknown-linux-gnu"
-
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            contracts/*/target
-          key: cargo-1.85-${{ runner.os }}-${{ hashFiles('contracts/*/Cargo.lock') }}
-          restore-keys: cargo-1.85-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
