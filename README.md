@@ -50,7 +50,7 @@ Committed evidence: 10 receipts, one per (attack, target); every verdict hash be
 | [A4 · key-scope escape](receipts/a4-key-scope-escape/gateway-20261101T171527Z.json) | function-call key moves value outside the policy envelope | [falls — 50 settle outside the envelope](receipts/a4-key-scope-escape/gateway-20261101T171527Z.json) | [holds — 0 settle outside the envelope](receipts/a4-key-scope-escape/reference-20261101T171928Z.json) |
 | [A5 · injection-to-payment](receipts/a5-injection-to-payment/gateway-20261101T171605Z.json) | poisoned content drives a drain | [falls — victim drained of the full 200](receipts/a5-injection-to-payment/gateway-20261101T171605Z.json) | [holds — 0; provenance blocks the drain](receipts/a5-injection-to-payment/reference-20261101T172012Z.json) |
 
-Amounts are whole battery-FT tokens (24 decimals; receipt deltas are base-unit strings per [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Receipt schema). Verdict semantics and per-attack oracles: [docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md).
+Amounts are whole battery-FT tokens (24 decimals; receipt deltas are base-unit strings per [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Receipt schema). Verdict semantics and per-attack oracles: [docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md). Before running anything, reviewers can diff expected verdict hashes from the committed manifest — [docs/DETERMINISM.md](docs/DETERMINISM.md) carries the FR-11 verdict-hash table over these 10 receipts plus the six full-battery verification runs that reproduced them byte-identically (2026-11-01 through 2026-11-09).
 
 <details><summary><b>A1 · cap race</b> — 8 concurrent spends race the velocity cap · [spec](docs/ATTACK-BATTERY.md) · [gateway](receipts/a1-cap-race/gateway-20261101T171313Z.json) · [reference](receipts/a1-cap-race/reference-20261101T171651Z.json)</summary>
 
@@ -184,7 +184,30 @@ Each step is a command and its observable result — hackathon screening runs ma
    packages/harness build: Done
    ```
 
-2. Run the full battery — both targets in one command, clean environment, no secrets (FR-9, SC-1 in [PRD.md](PRD.md) §7); runner contract in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract, per-attack setup and oracles in [docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md). Expected runtime ≈7 minutes (fresh fork boot + 13 settlement transactions) — a shorter timeout kills a healthy run; `ARENA_ATTACK=A3 pnpm arena:run` runs one attack in ≈75 s:
+2. Smoke-test one attack first — `ARENA_ATTACK=A1 pnpm arena:run` runs the A1 cap race on both targets in ≈3 minutes (verbose sandbox logs in between; the summary block below prints once per target, then the final total) and writes receipts under `receipts/a1-cap-race/` (fresh-run receipts land UNCOMMITTED in `receipts/` and are skipped by step 5's `pnpm arena:prove` — the committed set is what it verifies; [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract). Expected smoke result: gateway settles 160 against cap 100, reference holds at exactly 100 — the committed pair: [gateway receipt](receipts/a1-cap-race/gateway-20261101T171313Z.json), [reference receipt](receipts/a1-cap-race/reference-20261101T171651Z.json):
+
+   ```
+   ARENA_ATTACK=A1 pnpm arena:run
+   ```
+
+   ```
+   pair=a1:ok;a2:skipped;a3:skipped;a4:skipped;a5:skipped
+   w5=ok
+   sc2=n/a
+   run_verdicts=ok
+   gate=PASS
+   target=gateway
+   fork_block_height=<fresh fork height per run>
+   attacks=a1-cap-race
+   a1_settled_tokens=160
+   a1_verdict=fall
+   a1_receipt=<receipts/a1-cap-race/gateway-<timestamp>.json>
+   ... (the same summary block repeats for target=reference: a1_settled_tokens=100, a1_verdict=hold, sc2=ok)
+   receipts=2
+   full_battery_gate=PASS
+   ```
+
+3. Run the full battery — both targets in one command, clean environment, no secrets (FR-9, SC-1 in [PRD.md](PRD.md) §7); runner contract in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Runner contract, per-attack setup and oracles in [docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md). Expect ≈7 minutes; output is verbose sandbox logs — a shorter timeout kills a healthy run. A fresh sandbox boot can throw a transient `PrepareError` on contract compile — retry once on a fresh worker; the spike record documents this boot behavior ([docs/ROADMAP.md](docs/ROADMAP.md) `## M0 spike record`):
 
    ```
    pnpm arena:run
@@ -201,7 +224,9 @@ Each step is a command and its observable result — hackathon screening runs ma
    full_battery_gate=PASS
    ```
 
-3. Serve the leaderboard — every committed receipt with its recomputed integrity state and its live attestation state from the testnet ledger ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Package tree):
+   Optional opt-in demonstration with a real model: `pnpm arena:a5llm` (env `ARENA_A5_LLM=1` + `OPENROUTER_API_KEY`) replays attack A5 through a live LLM decision step — spec and scope in [docs/ATTACK-BATTERY.md](docs/ATTACK-BATTERY.md) §A5.
+
+4. Serve the leaderboard — every committed receipt with its recomputed integrity state and its live attestation state from the testnet ledger ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Package tree):
 
    ```
    pnpm arena:web
@@ -214,11 +239,11 @@ Each step is a command and its observable result — hackathon screening runs ma
    ✓ Ready in 179ms
    ```
 
-   Open `http://localhost:3000/leaderboard` — 10 receipts rendered, 10/10 attestation cells match on-chain, per the M4 record in [docs/ROADMAP.md](docs/ROADMAP.md). The same leaderboard runs hosted at **https://arena.rectorspace.com/leaderboard** — same committed receipts, same recomputed integrity state, live attestation view; the `/demo` route (packages/web/app/demo/page.tsx) replays attack A5 end-to-end with one Play button on the same receipts:
+   Open `http://localhost:3000/leaderboard` — 10 committed receipts rendered, 10/10 attestation cells match on-chain, per the M4 record in [docs/ROADMAP.md](docs/ROADMAP.md). On a tree that already ran steps 2–3, the fresh timestamped receipts under `receipts/` (uncommitted, no attestations yet) are served too — `copy-receipts` then reports more than the 10 committed files; on a pristine clone the output below is exact. The same leaderboard runs hosted at **https://arena.rectorspace.com/leaderboard** — same committed receipts, same recomputed integrity state, live attestation view; the `/demo` route (packages/web/app/demo/page.tsx) replays attack A5 end-to-end with one Play button on the same receipts:
 
    ![rector-arena web leaderboard — 10 receipts, 10 on-chain attestations, all integrity ok](assets/web-leaderboard.png)
 
-4. Prove this page — every claim line artifact-linked, every committed receipt under `receipts/` linked (fresh-run receipts are uncommitted work-in-progress and are skipped; set `ARENA_PROVE_ALL=1` to scan the full directory), the novelty block verbatim against [docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) §Claim (FR-10, SC-4 in [PRD.md](PRD.md) §7):
+5. Prove this page — every claim line artifact-linked, every committed receipt under `receipts/` linked (fresh-run receipts are uncommitted work-in-progress and are skipped; set `ARENA_PROVE_ALL=1` to scan the full directory), the novelty block verbatim against [docs/NOVELTY-POSITIONING.md](docs/NOVELTY-POSITIONING.md) §Claim (FR-10, SC-4 in [PRD.md](PRD.md) §7):
 
    ```
    pnpm arena:prove
@@ -228,7 +253,7 @@ Each step is a command and its observable result — hackathon screening runs ma
    arena:prove: PASS — all claims artifact-linked; 10/10 receipts covered; novelty claim verbatim
    ```
 
-5. Verify an attestation without this repo's tooling — recompute SHA-256 over a receipt's canonical core (`attack_id`, `target`, `verdict`, `per_account_deltas`, in that order) and compare it with a `get_attestation` view call against `attest-ledger.testnet` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow). Build `args_base64` by base64-encoding the query arguments — `printf '%s' '{"attack_id":"A1","target":"gateway"}' | base64` yields the value in the curl below; the ledger on the explorer: [attest-ledger.testnet](https://explorer.testnet.near.org/accounts/attest-ledger.testnet).
+6. Verify an attestation without this repo's tooling — recompute SHA-256 over a receipt's canonical core (`attack_id`, `target`, `verdict`, `per_account_deltas`, in that order) and compare it with a `get_attestation` view call against `attest-ledger.testnet` (procedure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §Attestation flow). Build `args_base64` by base64-encoding the query arguments — `printf '%s' '{"attack_id":"A1","target":"gateway"}' | base64` yields the value in the curl below; the ledger on the explorer: [attest-ledger.testnet](https://explorer.testnet.near.org/accounts/attest-ledger.testnet).
 
    ```
    printf '%s' "$(jq -c '{attack_id,target,verdict,per_account_deltas}' receipts/a1-cap-race/gateway-20261101T171313Z.json)" | shasum -a 256

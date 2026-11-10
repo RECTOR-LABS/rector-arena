@@ -34,6 +34,10 @@ Assets, adversaries, trust boundaries, and the invariants the arena tests. Invar
 | Deceived-owner approvals | `approve_request` is owner-signed; the provenance gate (INV-5) blocks intents that never originated from the approved request flow and treats a genuine owner approval as authoritative. A deceived owner who approves a malicious request defeats the gate from inside; phishing-the-owner is out of scope. | contracts/reference-wallet/src/lib.rs:255-259; INV-5 / A5 in Invariants above; PRD.md §1 |
 | Cross-contract chains outside the FC-key forward shape | A4 exercises the forwarder escape for function-call keys. Exploit chains against other system components — the FT contract itself, the sandbox, RPC providers — are out of scope. | PRD.md §1; INV-4 / A4 in Invariants above |
 
+### Held funds
+
+While a request is held, the balance stays in the wallet: proposing a request moves nothing (`create_request` only inserts an unapproved `Request`), and nothing leaves until `execute_spend` runs against an intent id naming an owner-approved, unconsumed request whose receiver and amount match the settled args — the INV-5 provenance gate, checked before consumption. The only unlock is the owner's approval: `approve_request` is owner-gated by predecessor check, so the agent alone can never make a held request settleable. Owner-unreachable case: an unapproved request can never settle — `execute_spend` panics with `request {} is not approved` before any transfer, so funds stay in place indefinitely (no loss, no movement until the owner returns). The contract has no expiry and no agent-callable cancel path for held requests: a proposed request rests in `requests` with `approved: false` until the owner approves it; there is no automatic release, ever. Grounding: contracts/reference-wallet/src/lib.rs:215-232 (`create_request`), :255-267 (`approve_request`), :144-155 (`execute_spend` provenance gate); INV-5 in Invariants above.
+
 ## Invariants (constitution)
 
 Every milestone in `docs/ROADMAP.md` preserves all five. Violations are observed by the mapped attack, not assumed.
