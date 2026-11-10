@@ -12,12 +12,77 @@ import VerdictSequencer, { type SequencerRow } from "../verdict-sequencer";
 
 // One clock drives both wallet panels. PHASE_DELTAS[i] is the ms between
 // phase i+1 and phase i+2: t=0 email card + step 1 lit, drafts at 1.4 s,
-// policy check at 2.8 s, gateway verdict at 3.7 s, reference verdict +
-// proof strip at 5.3 s. The strip then staggers in via the shared seq-row
-// keyframes (~1.9 s for 10 rows), leaving several seconds of dwell.
-const PHASE_DELTAS = [1400, 1400, 900, 1600] as const;
+// policy check at 2.8 s, gateway verdict at 3.7 s, the poisoned spend request
+// card arrives held at 5.3 s, the wallet refuses and the intent is DENIED at
+// 6.7 s. The reference verdict + proof strip land at finish (7.9 s); the strip
+// then staggers in via the shared seq-row keyframes (~1.9 s for 10 rows),
+// leaving several seconds of dwell.
+const PHASE_DELTAS = [1400, 1400, 900, 1600, 1400, 1200] as const;
 const FINISHED = PHASE_DELTAS.length + 1;
-const GATEWAY_VERDICT_AT = PHASE_DELTAS.length;
+const GATEWAY_VERDICT_AT = PHASE_DELTAS.length - 2;
+const HELD_REQUEST_AT = PHASE_DELTAS.length - 1;
+const REFUSED_AT = PHASE_DELTAS.length;
+
+// Same first-person refusal copy as /wallet-says-no §2 (WALLET_REFUSAL there;
+// that module is a server page, so the string is mirrored here verbatim).
+const WALLET_REFUSAL = "I did not send this.";
+
+// The poisoned intent, rendered in the §5 request-card design language.
+// Illustrative labels over committed evidence (the established honest
+// pattern): the intent exists only as a proposal — it was never
+// owner-approved, so the provenance gate denies it and it can never become
+// approvable (lib.rs spend_intent check order).
+function HeldRequestBeat({ phase }: { phase: number }) {
+  if (phase < HELD_REQUEST_AT) return null;
+  const refused = phase >= REFUSED_AT;
+  return (
+    <div
+      className="mt-4 max-w-2xl rounded-md border border-border bg-background p-4"
+      aria-label="held spend request"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-foreground">
+          Spend request, held for review
+        </p>
+        <span
+          className={`rounded-full border px-2 py-0.5 text-xs ${
+            refused ? "border-fall text-fall" : "border-border text-muted-foreground"
+          }`}
+        >
+          {refused ? "denied: provenance gate" : "held: awaiting owner approval"}
+        </span>
+      </div>
+      <dl className="mt-3 space-y-1 text-sm">
+        <div className="flex gap-2">
+          <dt className="text-muted-foreground">intent</dt>
+          <dd className="font-mono text-foreground">a5-drain-attacker</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="text-muted-foreground">receiver</dt>
+          <dd className="font-mono text-foreground">attacker.test.near</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="text-muted-foreground">amount</dt>
+          <dd className="font-semibold text-fall">200 battery-ft (full balance)</dd>
+        </div>
+      </dl>
+      {refused ? (
+        <>
+          <p className="mt-3 text-sm font-semibold text-foreground">{WALLET_REFUSAL}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            No owner-approved request exists for this intent, so it can never become
+            spendable: the transfer never starts.
+          </p>
+        </>
+      ) : (
+        <p className="mt-3 text-xs text-muted-foreground">
+          The poisoned email drafted this request. The wallet holds it, funds stay put
+          until the owner decides.
+        </p>
+      )}
+    </div>
+  );
+}
 
 export type DemoStageProps = {
   gatewayHash: string;
@@ -150,6 +215,8 @@ export default function DemoStage({
         <WalletPanel target="gateway" step={timelineStep} verdictVisible={phase >= GATEWAY_VERDICT_AT} />
         <WalletPanel target="reference" step={timelineStep} verdictVisible={finished} />
       </div>
+
+      <HeldRequestBeat phase={phase} />
 
       <div className="mt-4 bg-surface p-4">
         <p className="text-sm text-foreground">

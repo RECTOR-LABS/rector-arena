@@ -83,6 +83,22 @@ export default async function LandingPage() {
           </>
         )}
       </p>
+
+      <section aria-label="what the reference wallet enforces" className="mt-56 max-w-2xl">
+        <p className="text-foreground">
+          Spends only pay owner-allowlisted receivers, capped per request and velocity-capped in
+          total; the full spec lives in{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary hover:underline"
+            href="https://github.com/RECTOR-LABS/rector-arena/blob/main/contracts/reference-wallet/src/lib.rs#L507"
+          >
+            get_policy
+          </a>
+          .
+        </p>
+      </section>
     </main>
   );
 }
