@@ -1,17 +1,18 @@
 # arena-check — CI adoption of the rector-arena battery.
 #
 # What it runs on every push to main and every PR:
-#   1. `pnpm -r build`   — TS harness + web (tsc only; no contract compile).
-#      The battery loads the COMMITTED wasm artifacts (vendor/ft.wasm,
-#      contracts/reference-wallet/wasm) — CI never rebuilds them. The rustc
-#      1.85 law applies to whoever rebuilds those artifacts and lives in
-#      packages/harness/vendor/PROVENANCE.md.
+#   1. `pnpm -r build` — TS harness + web, plus the two wasm contracts
+#      (`env -u RUSTFLAGS cargo +1.85 build --release --target wasm32-unknown-unknown`
+#      per contract; rustup resolves +1.85 to the installed 1.85.1, pre-pinned
+#      below so the parallel contract builds never race the toolchain download).
+#      Compatibility law for the wasm: rustc >= 1.86 fails near-sandbox 0.1.5
+#      prepare — packages/harness/vendor/PROVENANCE.md.
 #   2. `ARENA_ATTACK=A1 pnpm arena:run` — the A1 cap-race smoke on both targets
 #      (~3 min with full sandbox boots included).
 #   3. `pnpm arena:prove` — recomputes committed receipts and verifies the
 #      attest-ledger.testnet view (network only, no secrets).
 #
-# Expected duration: ~5 min (the full ~7 min battery stays LOCAL by design —
+# Expected duration: ~6–10 min (the full ~7 min battery stays LOCAL by design —
 # `ARENA_TARGET` unset is never run here; CI gates on the smoke, not the full
 # battery).
 name: arena-check
@@ -36,6 +37,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      # Pre-pin the toolchain the contracts' `cargo +1.85` resolves to.
+      # rustup treats bare "1.85" as an invalid custom-link name, so the step
+      # installs the official 1.85.1 (what +1.85 resolves to) and makes it the
+      # default — the parallel contract builds then compile without racing the
+      # toolchain download. Wasm target needed for the contract artifacts.
+      - name: Install rust 1.85.1 (wasm32)
+        run: |
+          rustup toolchain install 1.85.1 --profile minimal --target wasm32-unknown-unknown
+          rustup default 1.85.1
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/*/target
+          key: cargo-1.85.1-${{ runner.os }}-${{ hashFiles('contracts/*/Cargo.lock') }}
+          restore-keys: cargo-1.85.1-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
