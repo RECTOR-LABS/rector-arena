@@ -22,7 +22,7 @@ The hackathon context stays binding: the submission deadline is 2026-11-14T23:59
 
 - No judge-story page: the hero carries one proof line; the narrative lives in the README and the 90-second video (SC-5).
 - No battery execution from the site, no RPC re-runs, no user accounts, no analytics, no CMS. Results shown are the committed receipts; attestation state is the live testnet view.
-- No new deploy infrastructure: the existing Vercel project `web` serves everything via the flat deploy `vercel deploy packages/web --prod` (procedure in `packages/web/AGENTS.md`).
+- No new deploy infrastructure: the existing Vercel project `web` serves everything; pushes to `main` auto-deploy (`rootDirectory: packages/web`, set 2026-11-10) and the flat upload `vercel deploy packages/web --prod` stays as the manual fallback (procedure in `packages/web/AGENTS.md`).
 - No changes to `packages/harness`, `contracts/`, `targets/`, or `receipts/` content.
 - Not an end-user wallet page: the "hardening reference, not a consumer product" guard (`PRD.md` §1 non-goals) stays in the site footer on every page.
 
