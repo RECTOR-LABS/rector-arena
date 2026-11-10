@@ -38,15 +38,17 @@ jobs:
         with:
           node-version: 22
 
-      # Pre-pin the toolchain the contracts' `cargo +1.85` resolves to.
-      # rustup treats bare "1.85" as an invalid custom-link name, so the step
-      # installs the official 1.85.1 (what +1.85 resolves to) and makes it the
-      # default — the parallel contract builds then compile without racing the
-      # toolchain download. Wasm target needed for the contract artifacts.
-      - name: Install rust 1.85.1 (wasm32)
+      # Pre-install the toolchain series the contracts' `cargo +1.85` requests.
+      # rustup resolves +1.85 to a series install literally named "1.85" — if
+      # that is absent, BOTH parallel contract builds trigger the same download
+      # into the same path and race (rename failure). Installing it once here,
+      # sequentially, makes +1.85 resolve locally. Series 1.85 lands the latest
+      # 1.85.x patch — below the rustc >= 1.86 sandbox-prepare break
+      # (packages/harness/vendor/PROVENANCE.md).
+      - name: Install rust series 1.85 (wasm32)
         run: |
-          rustup toolchain install 1.85.1 --profile minimal --target wasm32-unknown-unknown
-          rustup default 1.85.1
+          rustup toolchain install 1.85 --profile minimal --target wasm32-unknown-unknown
+          rustup default 1.85
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -55,8 +57,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             contracts/*/target
-          key: cargo-1.85.1-${{ runner.os }}-${{ hashFiles('contracts/*/Cargo.lock') }}
-          restore-keys: cargo-1.85.1-${{ runner.os }}-
+          key: cargo-1.85-${{ runner.os }}-${{ hashFiles('contracts/*/Cargo.lock') }}
+          restore-keys: cargo-1.85-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
