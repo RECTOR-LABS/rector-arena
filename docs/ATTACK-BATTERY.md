@@ -2,7 +2,7 @@
 
 Per-attack specifications A1..A5. Attack IDs are an immutable registry (`PRD.md` §0). Invariant mappings cite `docs/THREAT-MODEL.md`. Receipt schema and package layout cite `docs/ARCHITECTURE.md`.
 
-Chain-portability: A4 is NEAR-specific — function-call keys are a NEAR account primitive, so the escape shape lives and dies with NEAR. A1/A2/A3/A5 are universal agent-wallet policy-engine failure classes (concurrent budget reads, freeze semantics, settlement idempotency, content-driven drains) that port to any chain with programmable spend. The battery runs on a NEAR mainnet fork because the recorded fork decision supplies production fork semantics on a pinned block height ([docs/ROADMAP.md](docs/ROADMAP.md) `## M0 spike record`; adversary-to-attack mapping: [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) §Adversaries).
+Chain-portability: A4 is NEAR-specific — function-call keys are a NEAR account primitive, so the escape shape lives and dies with NEAR. A1/A2/A3/A5 are universal agent-wallet policy-engine failure classes (concurrent budget reads, freeze semantics, settlement idempotency, content-driven drains) that port to any chain with programmable spend. The battery runs on a NEAR mainnet fork because the recorded fork decision supplies production fork semantics on a pinned block height ([ROADMAP.md](ROADMAP.md) `## M0 spike record`; adversary-to-attack mapping: [THREAT-MODEL.md](THREAT-MODEL.md) §Adversaries).
 
 ## Targets registry
 
@@ -107,7 +107,7 @@ The oracle evaluates the invariant expectation from on-chain state alone. Verdic
 
 ## A5-injection-to-payment — poisoned content drives a drain
 
-- **Scope statement**: the poisoned content is modeled at the policy-engine boundary — the harness itself enacts the agent's settle decision from the fixture; no LLM inference sits in the path under test. The unit under test is the policy engine's provenance gate (INV-5), not content interpretation.
+- **Scope statement**: the poisoned content is modeled at the policy-engine boundary — the harness itself enacts the agent's settle decision from the fixture; no LLM inference sits in the path under test. The unit under test is the policy engine's provenance gate (INV-5), not content interpretation. A second, opt-in mode routes the same poisoned fixture through a real model decision before any settle call: `ARENA_A5_LLM=1 pnpm arena:a5llm` ([packages/harness/src/spike/a5-llm.ts](../packages/harness/src/spike/a5-llm.ts), requires `OPENROUTER_API_KEY` and takes `ARENA_TARGET`, default `reference`) — that mode is non-deterministic by nature, sits outside the battery and the receipt path (FR-11 untouched), and demonstrates the provenance gate blocking a live-model-driven drain attempt exactly as it blocks the harness-enacted one.
 - **Goal**: prove whether content alone can produce a settlement outside the approved request flow (INV-5).
 - **Adversary**: A-injection (`docs/THREAT-MODEL.md` §Adversaries).
 - **Setup**: `victim` is a target wallet with a full balance. The harness plants poisoned content (an email body) instructing the agent to transfer the entire balance to `attacker`.

@@ -17,6 +17,7 @@
   "scripts": {
     "arena:run": "tsx packages/harness/src/run.ts",
     "arena:prove": "tsx packages/harness/src/prove.ts",
+    "arena:a5llm": "tsx packages/harness/src/spike/a5-llm.ts",
     "arena:web": "pnpm --filter @rector-arena/web dev",
     "build": "pnpm -r build"
   }
