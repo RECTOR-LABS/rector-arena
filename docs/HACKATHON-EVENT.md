@@ -266,6 +266,8 @@ Ordered; each step names its owner. Times UTC.
 6. POST to https://nearhackathon.com/api/applications; 201 = saved — report to RECTOR. 403/409 = stop and ask; never retry around a refusal.
 7. Post-201 mistakes go through the organizers' request-changes flow (live HACKATHON.md 2026-11-10): the human requests changes at https://nearhackathon.com/request-changes — never a second POST (the same repository rejects with 409, and a different link counts as another project).
 
+Executed 2026-11-10: steps 1–6 complete. The POST returned 201 on the first attempt (no retry, buffer unused). Demo post: https://x.com/RZ1989sol/status/2119957375969091647. The payload is personal data and stays outside this repository, per §Payload contract.
+
 Baseline note: this scaffold is committed 2026-10-31, inside the pre-window baseline allowance (Q-001 in the verbatim copy: work from the 2026-10-19 announcement is baseline; the window runs to 2026-11-14).
 
 ## Payload contract

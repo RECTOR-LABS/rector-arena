@@ -15,6 +15,8 @@ Baseline note: this scaffold was committed 2026-10-31 — pre-window baseline pe
 
 Buffer: 2026-11-14 is reserved for retry of any M5 step (one submission per repository — the payload requestId is reused on retry per `docs/HACKATHON-EVENT.md`).
 
+M5 closed 2026-11-10 (buffer unused): battery film complete (SC-5 — 87.300 s, RECTOR-verdicted v5); X demo post live at https://x.com/RZ1989sol/status/2119957375969091647; POST returned 201 on the first attempt — SC-6 met 4 days before the 2026-11-14T23:59:00Z deadline. Submission payload (personal data) lives outside the repository per `docs/HACKATHON-EVENT.md` §Payload contract.
+
 ## Scope-cut order (pre-decided)
 
 If single-maintainer bandwidth forces cuts, the cut order is A5, then A3, then A2. A1 and A4 are never cut (they land at M1). After a cut, the affected FR/W/SC ids move to the decision log in `PRD.md` §11 with the date and reason — no silent shrink.
