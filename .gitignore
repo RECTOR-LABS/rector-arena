@@ -13,3 +13,4 @@ coverage/
 
 # Hallmark build-process cache (preflight, shots, log)
 .hallmark/
+.vercel
